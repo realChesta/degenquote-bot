@@ -3,8 +3,6 @@ const NeDB = require('nedb');
 const fs = require('fs');
 
 const settings = JSON.parse(fs.readFileSync('settings.json'));
-var quotes = { _id: 'quotes' };
-var stats = { _id: 'stats', users: {} };
 
 function main() {
     let token = fs.readFileSync(settings.tokenLocation, 'utf8');
@@ -45,29 +43,8 @@ function saveQuote(quote) {
     console.log(quote.from.id);
 }
 
-function checkOrCreateUser(userId, username, firstName) {
-
-}
-
 function getHelpText() {
     return "To store a quote, reply to the message with /quote (/q)\n" +
         "I can also execute the following commands for you:\n" +
         "/help - display the message you're currently reading\n";
 }
-
-const database = new NeDB({ filename: 'data.db', autoload: true });
-database.find({ _id: 'quotes' }, (q_err, q_docs) => {
-    if (q_docs.length === 0)
-        database.insert(quotes);
-    else
-        quotes = q_docs[0]
-
-    database.find({ _id: 'stats' }, (s_err, s_docs) => {
-        if (s_docs.length === 0)
-            database.insert(stats);
-        else
-            stats = s_docs[0];
-
-        main();
-    });
-});
