@@ -1,8 +1,11 @@
 const TeleBot = require('telebot');
-const NeDB = require('nedb');
 const fs = require('fs');
+const DbHelper = require('./dbhelper');
 
 const settings = JSON.parse(fs.readFileSync('settings.json'));
+var dbhelper = new DbHelper('data.db');
+
+dbhelper.load(main);
 
 function main() {
     let token = fs.readFileSync(settings.tokenLocation, 'utf8');

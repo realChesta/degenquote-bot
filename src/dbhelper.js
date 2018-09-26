@@ -1,18 +1,21 @@
+const NeDB = require('nedb');
+
 class DbHelper {
     constructor(filename) {
+        this.filename = filename;
         this.quotes = { _id: 'quotes' };
         this.stats = { _id: 'stats', users: {} };
     }
 
     load(callback) {
-        this.database = new NeDB({ filename: 'data.db', autoload: true });
+        this.database = new NeDB({ filename: this.filename, autoload: true });
         this.database.find({ _id: 'quotes' }, (q_err, q_docs) => {
             if (q_docs.length === 0)
                 this.database.insert(this.quotes);
             else
                 this.quotes = q_docs[0]
 
-            database.find({ _id: 'stats' }, (s_err, s_docs) => {
+            this.database.find({ _id: 'stats' }, (s_err, s_docs) => {
                 if (s_docs.length === 0)
                     this.database.insert(this.stats);
                 else
@@ -41,3 +44,5 @@ class DbHelper {
         this.database.update({ _id: _id }, { $set: dbObj });
     }
 }
+
+module.exports = DbHelper;
