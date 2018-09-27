@@ -13,7 +13,7 @@ class DbHelper {
             if (q_docs.length === 0)
                 this.database.insert(this.quotes);
             else
-                this.quotes = q_docs[0]
+                this.quotes = q_docs[0];
 
             this.database.find({ _id: 'stats' }, (s_err, s_docs) => {
                 if (s_docs.length === 0)
@@ -26,6 +26,25 @@ class DbHelper {
         });
     }
 
+    saveQuote(quoteId, text, userId) {
+        if (!this.quotes.hasOwnProperty(quoteId)) {
+            this.quotes[quoteId] = {
+                id: quoteId,
+                text: text,
+                user: userId
+            };
+
+            if (this.stats.users[userId])
+                this.stats.users[userId].quotes++;
+
+            this.updateQuoteInDB(quoteId);
+
+            return true;
+        }
+        else
+            return false;
+    }
+
     checkOrCreateUser(userId, username, firstName) {
         if (!this.stats.users.hasOwnProperty(userId)) {
             this.stats.users[userId] = {
@@ -34,7 +53,23 @@ class DbHelper {
                 firstName: firstName,
                 quotes: 0
             };
+
+            this.updateUserInDB(userId);
+
+            return true;
         }
+        else
+            return false;
+    }
+
+    updateUserInDB(userId) {
+        let users = { userId: this.stats.users[userId] };
+        this.database.update({ _id: 'stats' }, { $set: { users: users } });
+    }
+
+    updateQuoteInDB(quoteId) {
+        this.database.update({ _id: 'quotes' },
+            { $set: { quoteId: this.quotes[quoteId] } });
     }
 
     updateInDB(_id, container, objId) {

@@ -12,6 +12,7 @@ function main() {
     let bot = new TeleBot(token);
 
     //#region start
+
     bot.on('/start', (msg) => {
         return msg.reply.text(
             "Hi! I'm the Degenerate Quote Bot. I can store all your notable weeb quotes.\n" +
@@ -31,19 +32,27 @@ function main() {
         if (!msg.reply_to_message)
             return msg.reply.text("Please refer to a message.", { asReply: true });
 
-        saveQuote(msg.reply_to_message);
+        if (saveQuote(msg.reply_to_message))
+            return bot.sendMessage(msg.from.id, 'Quote saved.',
+                { replyToMessage: msg.reply_to_message.message_id });
+        else
+            return bot.sendMessage(msg.from.id, 'I already have that quote saved.',
+                { replyToMessage: msg.reply_to_message.message_id });
     });
     //#endregion
+
+    //region sieg
+    bot.on(/\s*s+i+e+g+\s*/i, (msg) => {
+        return msg.reply.text('heil', { asReply: true });
+    });
+    //endregion
 
     bot.start();
 }
 
 function saveQuote(quote) {
-    let toSave = {
-        id: quote.message_id,
-        text: quote.text
-    };
-    console.log(quote.from.id);
+    dbhelper.checkOrCreateUser(quote.from.id, quote.from.username, quote.from.first_name);
+    return dbhelper.saveQuote(quote.message_id, quote.text, quote.from.id);
 }
 
 function getHelpText() {
