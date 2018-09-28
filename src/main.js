@@ -5,7 +5,7 @@ const dateformat = require('dateformat');
 
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-    // application specific logging, throwing an error, or other logic here
+    console.log(reason.stack);
   });
 
 const settings = JSON.parse(fs.readFileSync('settings.json'));
