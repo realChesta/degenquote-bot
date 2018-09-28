@@ -19,7 +19,7 @@ async function main() {
     console.log('database loaded.');
 
     let token = fs.readFileSync(settings.token_location, 'utf8');
-    console.log('token read.');
+    console.log('token read: "' + token + '"');
     let bot = new TeleBot(token);
 
     let copepack = await bot.getStickerSet('degenquote_cope');
