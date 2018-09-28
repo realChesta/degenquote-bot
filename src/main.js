@@ -68,6 +68,8 @@ async function main() {
 
         let args = props.match[1];
 
+        let suffix = '';
+
         if (args) {
             args = args.trim();
             let num = Number(args);
@@ -84,13 +86,26 @@ async function main() {
             }
             //argument is something else
             else {
-                let regex = /(\w+):(@?\w+)/i;
-                let matches = args.match(regex);
-                debugger;
+                let matches = args.match(/(\w+):(@?\w+)/i);
+                matches.splice(0, 1);
+                switch (matches[0]) {
+                    case 'user':
+                        matches[1] = matches[1].replace('@', '');
+                        let user = Object.values(dbhelper.users).find(u => {
+                            return u.username.toLowerCase() == matches[1].toLowerCase() ||
+                                u.first_name.toLowerCase() == matches[1].toLowerCase();
+                        });
+                        quotes = quotes.filter(q => {
+                            return q.user == user.id;
+                        });
+                        pages = Math.ceil(quotes.length / settings.quotes_per_page);
+                        suffix = ": " + user.first_name;
+                        break;
+                }
             }
         }
 
-        let list = "*Stored Quotes* (page " + (startPage + 1) + " of " + pages + ")\n\n";
+        let list = "*Stored Quotes" + suffix + "* (page " + (startPage + 1) + " of " + pages + ")\n\n";
 
         let startIndex = startPage * settings.quotes_per_page;
 
