@@ -1,6 +1,7 @@
 const TeleBot = require('telebot');
 const fs = require('fs');
 const DbHelper = require('./dbhelper');
+const dateformat = require('dateformat');
 
 const settings = JSON.parse(fs.readFileSync('settings.json'));
 var dbhelper = new DbHelper('data.db');
@@ -41,25 +42,56 @@ function main() {
     //#endregion
 
     //#region show
-    bot.on(/^\/list\s+(.+)$/i, (msg, props) => {
+    bot.on(/^\/list(\s+.+)*$/i, (msg, props) => {
+        let quotes = Object.values(dbhelper.quotes);
 
-        //TODO: parse arguments
+        //sort quotes by date
+        quotes.sort((a,b) => {
+            return a.date - b.date;
+        });
 
-        let quotes = dbhelper.quotes.values();
+        //TODO: uncomment
+        //if (quotes.length <= 1)
+        //    return msg.reply.text('There are no stored quotes yet.', { asReply: true });
+
         let pages = Math.ceil(quotes.length / settings.quotes_per_page);
         let startPage = 0;
 
-        let list = "*Stored Quotes* (page " + startPage + " of " + pages + ")\n\n";
+        let args = props.match[1];
 
-        for (let i = startPage * settings.quotes_per_page; i < quotes.length; i++) {
-            let current = quotes[i];
-            let user = dbhelper.stats.users[current.user];
-            list += "_\"" + current.text + "_\"\n" +
-                "-" + user.first_name + ", " + quote.date.toString();
+        if (args) {
+            args = args.trim();
+            let num = Number(args);
+            if (!isNaN(num)) {
+                //the argument is a number
+                if (num > pages) {
+                    return msg.reply.text('I only have ' + pages +
+                        ' page' + (pages > 1 ? 's' : '') + ' worth of quotes. ' +
+                        'Please pick a number between 1 and ' + pages + '.', { asReply: true });
+                }
+                else {
+                    startPage = num - 1;
+                }
+            }
+            //argument is something else
+            else {
+
+            }
         }
+
+        let list = "*Stored Quotes* (page " + (startPage + 1) + " of " + pages + ")\n\n";
+
+        for (let i = 0; i < settings.quotes_per_page; i++) {
+            let q = quotes[(startPage * settings.quotes_per_page) + i]
+
+            if (q !== "quotes")
+                list += createQuoteString(q);
+        }
+
+        return msg.reply.text(list, { parseMode: 'Markdown' });
     });
     //#endregion
-
+    
     //#region sieg
     bot.on(/\s*s+i+e+g+\s*/i, (msg) => {
         return msg.reply.text('heil', { asReply: true });
@@ -67,6 +99,12 @@ function main() {
     //#endregion
 
     bot.start();
+}
+
+function createQuoteString(quote) {
+    return "\"" + quote.text + "\"\n" +
+        "_-" + dbhelper.stats.users[quote.user].first_name + ", " +
+        dateformat(quote.date, "d.m.yy") + "_\n\n";
 }
 
 function saveQuote(quote) {
