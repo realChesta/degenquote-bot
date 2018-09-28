@@ -92,7 +92,9 @@ async function main() {
 
         let list = "*Stored Quotes* (page " + (startPage + 1) + " of " + pages + ")\n\n";
 
-        for (let i = startPage * settings.quotes_per_page; i < quotes.length; i++) {
+        let startIndex = startPage * settings.quotes_per_page;
+
+        for (let i = startIndex; i < Math.min(startIndex + 5, quotes.length); i++) {
             if (quotes[i] !== "quotes")
                 list += createQuoteString(quotes[i]);
         }
