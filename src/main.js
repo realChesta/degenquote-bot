@@ -22,8 +22,9 @@ async function main() {
     console.log('token read.');
     let bot = new TeleBot(token);
 
-    let copepack = await bot.getStickerSet('degenquote_cope');
-    console.log('sticker pack retrieved.');
+    //for some reason this breaks the code on the server, quicc fix
+    //let copepack = await bot.getStickerSet('degenquote_cope');
+    //console.log('sticker pack retrieved.');
 
     //#region start
     bot.on('/start', (msg) => {
@@ -163,7 +164,7 @@ async function main() {
 
     //#region cope
     bot.on(/(^|\s)cope(\s|$)/i, msg => {
-        return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
+        return msg.reply.sticker("CAADBAADVQADjpidBscos_ujaMZzAg"/*copepack.stickers[0].file_id*/, { asReply: true });
     });
     //#endregion
 
