@@ -63,13 +63,15 @@ class DbHelper {
     }
 
     updateUserInDB(userId) {
-        let users = { userId: this.stats.users[userId] };
-        this.database.update({ _id: 'stats' }, { $set: { users: users } });
+        let userObj = {};
+        userObj[userId] = this.stats.users[userId];
+        this.database.update({ _id: 'stats' }, { $set: { users: userObj } });
     }
 
     updateQuoteInDB(quoteId) {
-        this.database.update({ _id: 'quotes' },
-            { $set: { quoteId: this.quotes[quoteId] } });
+        let dbObj = {};
+        dbObj[quoteId] = this.quotes[quoteId];
+        this.database.update({ _id: 'quotes' }, { $set: dbObj });
     }
 
     updateInDB(_id, container, objId) {
