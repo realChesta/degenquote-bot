@@ -8,7 +8,7 @@ var dbhelper = new DbHelper('data.db');
 dbhelper.load(main);
 
 function main() {
-    let token = fs.readFileSync(settings.tokenLocation, 'utf8');
+    let token = fs.readFileSync(settings.token_location, 'utf8');
     let bot = new TeleBot(token);
 
     //#region start
@@ -42,7 +42,21 @@ function main() {
 
     //#region show
     bot.on(/^\/list\s+(.+)$/i, (msg, props) => {
-        debugger;
+
+        //TODO: parse arguments
+
+        let quotes = dbhelper.quotes.values();
+        let pages = Math.ceil(quotes.length / settings.quotes_per_page);
+        let startPage = 0;
+
+        let list = "*Stored Quotes* (page " + startPage + " of " + pages + ")\n\n";
+
+        for (let i = startPage * settings.quotes_per_page; i < quotes.length; i++) {
+            let current = quotes[i];
+            let user = dbhelper.stats.users[current.user];
+            list += "_\"" + current.text + "_\"\n" +
+                "-" + user.first_name + ", " + quote.date.toString();
+        }
     });
     //#endregion
 

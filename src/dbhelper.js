@@ -51,7 +51,7 @@ class DbHelper {
             this.stats.users[userId] = {
                 id: userId,
                 username: username,
-                firstName: firstName,
+                first_name: firstName,
                 quotes: 0
             };
 

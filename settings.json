@@ -1,3 +1,4 @@
 {
-    "tokenLocation": "token.txt"
+    "token_location": "token.txt",
+    "quotes_per_page": 5
 }

@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dateformat": "^3.0.3",
     "nedb": "^1.8.0",
     "telebot": "^1.2.6"
   }
