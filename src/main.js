@@ -13,7 +13,6 @@ function main() {
     let bot = new TeleBot(token);
 
     //#region start
-
     bot.on('/start', (msg) => {
         return msg.reply.text(
             "Hi! I'm the Degenerate Quote Bot. I can store all your notable weeb quotes.\n" +
@@ -41,18 +40,17 @@ function main() {
     });
     //#endregion
 
-    //#region show
+    //#region list
     bot.on(/^\/list(\s+.+)*$/i, (msg, props) => {
         let quotes = Object.values(dbhelper.quotes);
 
         //sort quotes by date
-        quotes.sort((a,b) => {
+        quotes.sort((a, b) => {
             return a.date - b.date;
         });
 
-        //TODO: uncomment
-        //if (quotes.length <= 1)
-        //    return msg.reply.text('There are no stored quotes yet.', { asReply: true });
+        if (quotes.length <= 1)
+            return msg.reply.text('There are no stored quotes yet.', { asReply: true });
 
         let pages = Math.ceil(quotes.length / settings.quotes_per_page);
         let startPage = 0;
@@ -75,17 +73,17 @@ function main() {
             }
             //argument is something else
             else {
-
+                let regex = /(\w+):(@?\w+)/i;
+                let matches = args.match(regex);
+                debugger;
             }
         }
 
         let list = "*Stored Quotes* (page " + (startPage + 1) + " of " + pages + ")\n\n";
 
-        for (let i = 0; i < settings.quotes_per_page; i++) {
-            let q = quotes[(startPage * settings.quotes_per_page) + i]
-
-            if (q !== "quotes")
-                list += createQuoteString(q);
+        for (let i = startPage * settings.quotes_per_page; i < quotes.length; i++) {
+            if (quotes[i] !== "quotes")
+                list += createQuoteString(quotes[i]);
         }
 
         return msg.reply.text(list, { parseMode: 'Markdown' });
@@ -102,18 +100,21 @@ function main() {
 }
 
 function createQuoteString(quote) {
-    return "\"" + quote.text + "\"\n" +
-        "_-[" + dbhelper.stats.users[quote.user].first_name + "](tg://user?id=" + quote.user +"), " +
-        dateformat(quote.date, "d.m.yy") + "_\n\n";
+    return "_\"" + quote.text + "\"_\n" +
+        "-[" + dbhelper.users[quote.user].first_name + "](tg://user?id=" + quote.user + "), " +
+        dateformat(quote.date, "d.m.yy HH:MM") + "\n\n";
 }
 
 function saveQuote(quote) {
     dbhelper.checkOrCreateUser(quote.from.id, quote.from.username, quote.from.first_name);
-    return dbhelper.saveQuote(quote.message_id, quote.text, quote.date, quote.from.id);
+    return dbhelper.saveQuote(quote.message_id, quote.text, quote.date * 1000, quote.from.id);
 }
 
 function getHelpText() {
-    return "To store a quote, reply to the message with /quote (/q)\n" +
-        "I can also execute the following commands for you:\n" +
+    return "To store a quote, reply to the message with /quote (/q).\n" +
+        "To view all stored quotes, use /list.\n" +
+        "Here's my full command list:\n" +
+        "/quote, /q - store the referenced message as a quote.\n" +
+        "/list [int] [user:[name]] - display stored quotes, one page at a time. Filter by users using 'user:name'.\n" +
         "/help - display the message you're currently reading\n";
 }
