@@ -86,7 +86,7 @@ async function main() {
             }
             //argument is something else
             else {
-                let matches = args.match(/(\w+):(@?\w+)/i);
+                let matches = args.match(/(\w+):(@?[\w-]+)/i);
                 if (!matches || (matches && matches.length < 3))
                     return msg.reply.text("Invalid syntax. Please se /help for the correct usage of this command.", { asReply: true });
                 matches.splice(0, 1);
@@ -106,9 +106,27 @@ async function main() {
                         suffix = ": " + user.first_name;
                         break;
 
+                    case 'before':
+                    case 'after':
+                        let rawtime = matches[1].split('-').map(Number);
+                        if (rawtime.length !== 5 || rawtime.some(isNaN))
+                            return msg.reply.text('wrong time format. Please use the following format: dd-mm-yyyy-HH-MM', { asReply: true });
+
+                        let date = new Date(rawtime[2], rawtime[1] - 1, rawtime[0], rawtime[3], rawtime[4]);
+
+                        quotes = quotes.filter(q => {
+                            return (matches[0] === 'before') ? (q.date < date) : (q.date > date);
+                        });
+                        pages = Math.ceil(quotes.length / settings.quotes_per_page);
+                        suffix = ": " + matches[0] + " " + dateformat(date, "d. mmm. yyyy H:MM");
+
+                        if (quotes.length === 0)
+                            return msg.reply.text("I have no quotes from " + matches[0] + " " + dateformat(date, 'mmmm dS yyyy "at" H:MM') + "!");
+
+                        break;
+
                     default:
                         return msg.reply.text("Unknown argument: '" + matches[0] + "'. Please see /help for all available arguments.", { asReply: true });
-                        break;
                 }
             }
         }
@@ -157,6 +175,8 @@ function getHelpText() {
         "To view all stored quotes, use /list.\n" +
         "Here's my full command list:\n" +
         "/quote, /q - store the referenced message as a quote.\n" +
-        "/list [int] [user:[name]] - display stored quotes, one page at a time. Filter by users using 'user:name'.\n" +
+        "/list [argument] - display stored quotes, one page at a time.\n" +
+        "   user:name - display quotes from a user with a specific first name or username.\n" +
+        "   before|after:dd-mm-yyyy-HH-MM - display quotes from before/after a specific date and time.\n" +
         "/help - display the message you're currently reading\n";
 }
