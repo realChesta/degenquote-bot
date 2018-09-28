@@ -57,7 +57,7 @@ async function main() {
 
         //sort quotes by date
         quotes.sort((a, b) => {
-            return a.date - b.date;
+            return b.date - a.date;
         });
 
         if (quotes.length <= 1)
