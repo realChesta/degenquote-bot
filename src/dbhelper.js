@@ -26,11 +26,12 @@ class DbHelper {
         });
     }
 
-    saveQuote(quoteId, text, userId) {
+    saveQuote(quoteId, text, date, userId) {
         if (!this.quotes.hasOwnProperty(quoteId)) {
             this.quotes[quoteId] = {
                 id: quoteId,
                 text: text,
+                date: date,
                 user: userId
             };
 

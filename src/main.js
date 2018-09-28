@@ -31,8 +31,7 @@ function main() {
     bot.on(['/q', '/quote'], (msg) => {
         if (!msg.reply_to_message)
             return msg.reply.text("Please refer to a message.", { asReply: true });
-
-        if (saveQuote(msg.reply_to_message))
+        else if (saveQuote(msg.reply_to_message))
             return bot.sendMessage(msg.from.id, 'Quote saved.',
                 { replyToMessage: msg.reply_to_message.message_id });
         else
@@ -41,18 +40,24 @@ function main() {
     });
     //#endregion
 
-    //region sieg
+    //#region show
+    bot.on(/^\/list\s+(.+)$/i, (msg, props) => {
+        debugger;
+    });
+    //#endregion
+
+    //#region sieg
     bot.on(/\s*s+i+e+g+\s*/i, (msg) => {
         return msg.reply.text('heil', { asReply: true });
     });
-    //endregion
+    //#endregion
 
     bot.start();
 }
 
 function saveQuote(quote) {
     dbhelper.checkOrCreateUser(quote.from.id, quote.from.username, quote.from.first_name);
-    return dbhelper.saveQuote(quote.message_id, quote.text, quote.from.id);
+    return dbhelper.saveQuote(quote.message_id, quote.text, quote.date, quote.from.id);
 }
 
 function getHelpText() {
