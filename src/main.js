@@ -3,6 +3,12 @@ const fs = require('fs');
 const DbHelper = require('./dbhelper');
 const dateformat = require('dateformat');
 
+//TODO: added by
+//TODO: whitelist for /quote
+//TODO: shutdown command with whitelist
+//TODO: /help in dm only
+
+
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
     console.log(reason.stack);
@@ -45,13 +51,13 @@ async function main() {
         if (!msg.reply_to_message)
             return msg.reply.text('Please refer to a message.', { asReply: true });
         else if (!msg.reply_to_message.text)
-            return bot.sendMessage(msg.from.id, "I can't save non-text messages.",
+            return bot.sendMessage(msg.chat.id, "I can't save non-text messages.",
                 { replyToMessage: msg.reply_to_message.message_id });
         else if (saveQuote(msg.reply_to_message))
-            return bot.sendMessage(msg.from.id, "Quote saved.",
+            return bot.sendMessage(msg.chat.id, "Quote saved.",
                 { replyToMessage: msg.reply_to_message.message_id });
         else
-            return bot.sendMessage(msg.from.id, "I already have that quote saved.",
+            return bot.sendMessage(msg.chat.id, "I already have that quote saved.",
                 { replyToMessage: msg.reply_to_message.message_id });
     });
     //#endregion
@@ -86,7 +92,7 @@ async function main() {
             let num = Number(args);
             if (!isNaN(num)) {
                 //the argument is a number
-                if (num > pages) {
+                if (num > pages || num < 1) {
                     return msg.reply.text('I only have ' + pages +
                         ' page' + (pages > 1 ? 's' : '') + ' worth of quotes. ' +
                         'Please pick a number between 1 and ' + pages + '.', { asReply: true });
@@ -105,8 +111,8 @@ async function main() {
                     case 'user':
                         matches[1] = matches[1].replace('@', '');
                         let user = Object.values(dbhelper.users).find(u => {
-                            return (u !== "users") && (u.username.toLowerCase() == matches[1].toLowerCase() ||
-                                u.first_name.toLowerCase() == matches[1].toLowerCase());
+                            return (u !== "users") && (u.username && u.username.toLowerCase() == matches[1].toLowerCase() ||
+                                u.first_name && u.first_name.toLowerCase() == matches[1].toLowerCase());
                         });
                         if (!user)
                             return msg.reply.text("I couldn't find any quoted users with that name or username!", { asReply: true });
@@ -166,6 +172,11 @@ async function main() {
         return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
     });
     //#endregion
+
+    bot.on('*', msg => {
+        console.log(msg.text);
+        //return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
+    });
 
     bot.start();
 }
