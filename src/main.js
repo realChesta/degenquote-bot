@@ -91,7 +91,7 @@ function main() {
         return msg.reply.text(list, { parseMode: 'Markdown' });
     });
     //#endregion
-    
+
     //#region sieg
     bot.on(/\s*s+i+e+g+\s*/i, (msg) => {
         return msg.reply.text('heil', { asReply: true });
@@ -103,7 +103,7 @@ function main() {
 
 function createQuoteString(quote) {
     return "\"" + quote.text + "\"\n" +
-        "_-" + dbhelper.stats.users[quote.user].first_name + ", " +
+        "_-[" + dbhelper.stats.users[quote.user].first_name + "](tg://user?id=" + quote.user +"), " +
         dateformat(quote.date, "d.m.yy") + "_\n\n";
 }
 
