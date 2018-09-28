@@ -9,15 +9,21 @@ process.on('unhandledRejection', (reason, p) => {
   });
 
 const settings = JSON.parse(fs.readFileSync('settings.json'));
+console.log('read settings.');
+
 var dbhelper = new DbHelper('data.db');
 
 dbhelper.load(main);
 
 async function main() {
+    console.log('database loaded.');
+
     let token = fs.readFileSync(settings.token_location, 'utf8');
+    console.log('token read.');
     let bot = new TeleBot(token);
 
     let copepack = await bot.getStickerSet('degenquote_cope');
+    console.log('sticker pack retrieved.');
 
     //#region start
     bot.on('/start', (msg) => {
