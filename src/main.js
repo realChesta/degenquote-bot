@@ -87,6 +87,8 @@ async function main() {
             //argument is something else
             else {
                 let matches = args.match(/(\w+):(@?\w+)/i);
+                if (matches.length < 3)
+                    return msg.reply.text("Invalid syntax. Please se /help for the correct usage of this command.", { asReply: true });
                 matches.splice(0, 1);
                 switch (matches[0]) {
                     case 'user':
@@ -95,11 +97,17 @@ async function main() {
                             return u.username.toLowerCase() == matches[1].toLowerCase() ||
                                 u.first_name.toLowerCase() == matches[1].toLowerCase();
                         });
+                        if (!user)
+                            return msg.reply.text("I couldn't find any user with that name or username!", {asReply: true});
                         quotes = quotes.filter(q => {
                             return q.user == user.id;
                         });
                         pages = Math.ceil(quotes.length / settings.quotes_per_page);
                         suffix = ": " + user.first_name;
+                        break;
+
+                    default:
+                        return msg.reply.text("Unknown argument: '" + matches[0] + "'. Please see /help for all available arguments.", { asReply: true });
                         break;
                 }
             }
