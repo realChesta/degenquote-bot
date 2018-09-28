@@ -87,18 +87,18 @@ async function main() {
             //argument is something else
             else {
                 let matches = args.match(/(\w+):(@?\w+)/i);
-                if (matches.length < 3)
+                if (!matches || (matches && matches.length < 3))
                     return msg.reply.text("Invalid syntax. Please se /help for the correct usage of this command.", { asReply: true });
                 matches.splice(0, 1);
                 switch (matches[0]) {
                     case 'user':
                         matches[1] = matches[1].replace('@', '');
                         let user = Object.values(dbhelper.users).find(u => {
-                            return u.username.toLowerCase() == matches[1].toLowerCase() ||
-                                u.first_name.toLowerCase() == matches[1].toLowerCase();
+                            return (u !== "users") && (u.username.toLowerCase() == matches[1].toLowerCase() ||
+                                u.first_name.toLowerCase() == matches[1].toLowerCase());
                         });
                         if (!user)
-                            return msg.reply.text("I couldn't find any user with that name or username!", {asReply: true});
+                            return msg.reply.text("I couldn't find any quoted users with that name or username!", { asReply: true });
                         quotes = quotes.filter(q => {
                             return q.user == user.id;
                         });
