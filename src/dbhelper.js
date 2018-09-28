@@ -4,7 +4,7 @@ class DbHelper {
     constructor(filename) {
         this.filename = filename;
         this.quotes = { _id: 'quotes' };
-        this.stats = { _id: 'stats', users: {} };
+        this.users = { _id: 'users' };
     }
 
     load(callback) {
@@ -15,11 +15,11 @@ class DbHelper {
             else
                 this.quotes = q_docs[0];
 
-            this.database.find({ _id: 'stats' }, (s_err, s_docs) => {
+            this.database.find({ _id: 'users' }, (s_err, s_docs) => {
                 if (s_docs.length === 0)
-                    this.database.insert(this.stats);
+                    this.database.insert(this.users);
                 else
-                    this.stats = s_docs[0];
+                    this.users = s_docs[0];
 
                 callback();
             });
@@ -35,10 +35,11 @@ class DbHelper {
                 user: userId
             };
 
-            if (this.stats.users[userId])
-                this.stats.users[userId].quotes++;
+            if (this.users[userId])
+                this.users[userId].quotes++;
 
             this.updateQuoteInDB(quoteId);
+            this.updateUserInDB(userId);
 
             return true;
         }
@@ -47,8 +48,8 @@ class DbHelper {
     }
 
     checkOrCreateUser(userId, username, firstName) {
-        if (!this.stats.users.hasOwnProperty(userId)) {
-            this.stats.users[userId] = {
+        if (!this.users.hasOwnProperty(userId)) {
+            this.users[userId] = {
                 id: userId,
                 username: username,
                 first_name: firstName,
@@ -64,15 +65,11 @@ class DbHelper {
     }
 
     updateUserInDB(userId) {
-        let userObj = {};
-        userObj[userId] = this.stats.users[userId];
-        this.database.update({ _id: 'stats' }, { $set: { users: userObj } });
+        this.updateInDB('users', this.users, userId);
     }
 
     updateQuoteInDB(quoteId) {
-        let dbObj = {};
-        dbObj[quoteId] = this.quotes[quoteId];
-        this.database.update({ _id: 'quotes' }, { $set: dbObj });
+        this.updateInDB('quotes', this.quotes, quoteId);
     }
 
     updateInDB(_id, container, objId) {
