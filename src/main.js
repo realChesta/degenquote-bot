@@ -18,7 +18,7 @@ dbhelper.load(main);
 async function main() {
     console.log('database loaded.');
 
-    let token = fs.readFileSync(settings.token_location, 'utf8');
+    let token = fs.readFileSync(settings.token_location, 'utf8').trim();
     console.log('token read: "' + token + '"');
     let bot = new TeleBot(token);
 
