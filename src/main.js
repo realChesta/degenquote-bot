@@ -3,6 +3,11 @@ const fs = require('fs');
 const DbHelper = require('./dbhelper');
 const dateformat = require('dateformat');
 
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    // application specific logging, throwing an error, or other logic here
+  });
+
 const settings = JSON.parse(fs.readFileSync('settings.json'));
 var dbhelper = new DbHelper('data.db');
 
