@@ -8,9 +8,11 @@ var dbhelper = new DbHelper('data.db');
 
 dbhelper.load(main);
 
-function main() {
+async function main() {
     let token = fs.readFileSync(settings.token_location, 'utf8');
     let bot = new TeleBot(token);
+
+    let copepack = await bot.getStickerSet('degenquote_cope');
 
     //#region start
     bot.on('/start', (msg) => {
@@ -30,12 +32,15 @@ function main() {
     //#region quote
     bot.on(['/q', '/quote'], (msg) => {
         if (!msg.reply_to_message)
-            return msg.reply.text("Please refer to a message.", { asReply: true });
+            return msg.reply.text('Please refer to a message.', { asReply: true });
+        else if (!msg.reply_to_message.text)
+            return bot.sendMessage(msg.from.id, "I can't save non-text messages.",
+                { replyToMessage: msg.reply_to_message.message_id });
         else if (saveQuote(msg.reply_to_message))
-            return bot.sendMessage(msg.from.id, 'Quote saved.',
+            return bot.sendMessage(msg.from.id, "Quote saved.",
                 { replyToMessage: msg.reply_to_message.message_id });
         else
-            return bot.sendMessage(msg.from.id, 'I already have that quote saved.',
+            return bot.sendMessage(msg.from.id, "I already have that quote saved.",
                 { replyToMessage: msg.reply_to_message.message_id });
     });
     //#endregion
@@ -43,6 +48,12 @@ function main() {
     //#region list
     bot.on(/^\/list(\s+.+)*$/i, (msg, props) => {
         let quotes = Object.values(dbhelper.quotes);
+
+        //remove _id field
+        let id_index = quotes.indexOf("quotes");
+        if (id_index > -1) {
+            quotes.splice(id_index, 1);
+        }
 
         //sort quotes by date
         quotes.sort((a, b) => {
@@ -93,6 +104,12 @@ function main() {
     //#region sieg
     bot.on(/\s*s+i+e+g+\s*/i, (msg) => {
         return msg.reply.text('heil', { asReply: true });
+    });
+    //#endregion
+
+    //#region cope
+    bot.on(/(^|\s)cope(\s|$)/i, msg => {
+        return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
     });
     //#endregion
 
