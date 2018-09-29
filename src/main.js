@@ -53,8 +53,8 @@ async function main() {
         else if (!msg.reply_to_message.text)
             return bot.sendMessage(msg.chat.id, "I can't save non-text messages.",
                 { replyToMessage: msg.reply_to_message.message_id });
-        else if (msg.from.username === "degenquote_bot")
-            return bot.reply.text("I can't save things I said.", { asReply: true });
+        else if (msg.reply_to_message.from.username === "degenquote_bot")
+            return msg.reply.text("I can't save things I said.", { asReply: true });
         else if (saveQuote(msg.reply_to_message))
             return bot.sendMessage(msg.chat.id, "Quote saved.",
                 { replyToMessage: msg.reply_to_message.message_id });
