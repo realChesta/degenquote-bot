@@ -79,7 +79,7 @@ async function main() {
             return b.date - a.date;
         });
 
-        if (quotes.length <= 1)
+        if (quotes.length < 1)
             return msg.reply.text('There are no stored quotes yet.', { asReply: true });
 
         let pages = Math.ceil(quotes.length / settings.quotes_per_page);
@@ -170,7 +170,7 @@ async function main() {
     //#endregion
 
     //#region cope
-    bot.on(/(^|\s)cope(\s|$)/i, msg => {
+    bot.on(/cope/i, msg => {
         return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
     });
     //#endregion
