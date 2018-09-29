@@ -170,7 +170,7 @@ async function main() {
     //#endregion
 
     //#region cope
-    bot.on(/(^|\s)cope(\s|$)/i, msg => {
+    bot.on(/(^|\s)[cс][oо][pр][eе](\s|$)/i, msg => {
         return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
     });
     //#endregion
