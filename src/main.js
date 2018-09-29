@@ -12,7 +12,7 @@ const dateformat = require('dateformat');
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
     console.log(reason.stack);
-  });
+});
 
 const settings = JSON.parse(fs.readFileSync('settings.json'));
 console.log('read settings.');
@@ -53,6 +53,8 @@ async function main() {
         else if (!msg.reply_to_message.text)
             return bot.sendMessage(msg.chat.id, "I can't save non-text messages.",
                 { replyToMessage: msg.reply_to_message.message_id });
+        else if (msg.from.username === "degenquote_bot")
+            return bot.reply.text("I can't save things I said.", { asReply: true });
         else if (saveQuote(msg.reply_to_message))
             return bot.sendMessage(msg.chat.id, "Quote saved.",
                 { replyToMessage: msg.reply_to_message.message_id });
@@ -174,7 +176,7 @@ async function main() {
     //#endregion
 
     bot.on('*', msg => {
-        //console.log(msg.text);
+        console.log(msg.text);
         //return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
     });
 
