@@ -1,4 +1,5 @@
 {
     "token_location": "token.txt",
-    "quotes_per_page": 5
+    "quotes_per_page": 5,
+    "admins": []
 }

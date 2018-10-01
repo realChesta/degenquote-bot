@@ -181,6 +181,16 @@ async function main() {
     });
     //#endregion
 
+    //#region stop
+    bot.on('/stop', msg => {
+        if (settings.admins.indexOf(msg.from.username) > -1) {
+            return bot.stop('shutting down...');
+        }
+        else
+            return msg.reply.text('You are not authorized to use this command.', { asReply: true });
+    });
+    //#endregion
+
     bot.start();
 }
 
