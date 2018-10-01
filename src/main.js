@@ -192,7 +192,7 @@ async function main() {
     //#endregion
 
     //#region cope
-    bot.on(/(^|\s)[сc][^a-zA-Z0-9]*[оo0][^a-zA-Z0-9]*[рp][^a-zA-Z0-9]*[еe3](\s|$)/i, msg => {
+    bot.on(/(^|\s)[сc][^a-zA-Z0-9]*[оoｏο0][^a-zA-Z0-9]*[ррｐp][^a-zA-Z0-9]*[еeеｅ3](\s|$)/i, msg => {
         return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
     });
     //#endregion
