@@ -175,10 +175,11 @@ async function main() {
     });
     //#endregion
 
-    bot.on('*', msg => {
-        //console.log(msg.text);
-        //return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
+    //#region LoliClout
+    bot.on(/loli/i, msg => {
+        return msg.reply.text('@DefinitelyNotLoliClout', { asReply: true });
     });
+    //#endregion
 
     bot.start();
 }
