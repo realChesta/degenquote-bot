@@ -240,5 +240,5 @@ function getHelpText() {
 }
 
 function saveSettingsSync() {
-    fs.writeFileSync(settingsfile, JSON.stringify(settings));
+    fs.writeFileSync(settingsfile, JSON.stringify(settings, null, 4));
 }
