@@ -28,6 +28,7 @@ settings = {
     "token": "MISSING_TOKEN",
     "quotes_per_page": 5,
     "admins": [],
+    "actions": {},
     ...settings
 };
 saveSettingsSync();
@@ -49,9 +50,6 @@ async function main() {
     token = token.trim();
     console.log('token read: "' + token + '"');
     let bot = new TeleBot(token);
-
-    let copepack = await bot.getStickerSet('degenquote_cope');
-    console.log('sticker pack retrieved.');
 
     //#region start
     bot.on('/start', (msg) => {
@@ -185,24 +183,6 @@ async function main() {
     });
     //#endregion
 
-    //#region sieg
-    bot.on(/\s*s+i+e+g+\s*/i, (msg) => {
-        return msg.reply.text('heil', { asReply: true });
-    });
-    //#endregion
-
-    //#region cope
-    bot.on(/(^|\s)[сc][^a-zA-Z0-9]*[оoｏο0][^a-zA-Z0-9]*[ррｐp][^a-zA-Z0-9]*[еeеｅ3](\s|$)/i, msg => {
-        return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
-    });
-    //#endregion
-
-    //#region LoliClout
-    bot.on(/loli/i, msg => {
-        return msg.reply.text('@DefinitelyNotLoliClout @rikidere', { asReply: true });
-    });
-    //#endregion
-
     //#region stop
     bot.on('/stop', msg => {
         if (settings.admins.indexOf(msg.from.username) > -1) {
@@ -214,7 +194,22 @@ async function main() {
     });
     //#endregion
 
+    registerActions(settings.actions, bot);
+
     bot.start();
+}
+
+function registerActions(actions, bot) {
+    for (reg in actions) {
+        let action = actions[reg];
+        bot.on(new RegExp(reg, 'i'), msg => {
+            console.log(action);
+            if (action.text)
+                return msg.reply.text(action.text, { asReply: true });
+            else if (action.sticker)
+                return msg.reply.sticker(action.sticker, { asReply: true });
+        });
+    }
 }
 
 function createQuoteString(quote) {
