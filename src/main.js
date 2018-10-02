@@ -10,10 +10,10 @@ const process = require('process');
 //TODO: /help in dm only
 
 
-    process.on('unhandledRejection', (reason, p) => {
-        console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-        console.log(reason.stack);
-    });
+process.on('unhandledRejection', (reason, p) => {
+    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    console.log(reason.stack);
+});
 
 
 const settingsfile = 'settings.json';
@@ -206,7 +206,8 @@ async function main() {
     //#region stop
     bot.on('/stop', msg => {
         if (settings.admins.indexOf(msg.from.username) > -1) {
-            return bot.stop('shutting down...');
+            bot.stop('shutting down...');
+            return msg.reply.text('goodbye');
         }
         else
             return msg.reply.text('You are not authorized to use this command.', { asReply: true });
