@@ -45,7 +45,7 @@ async function main() {
     let token = settings.token;
     if (token == "MISSING_TOKEN") {
         console.error('token in settings not set, please set the token, then restart');
-        process.exit(1);
+        return;
     }
     token = token.trim();
     console.log('token read: "' + token + '"');
