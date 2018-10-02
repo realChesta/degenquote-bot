@@ -2,6 +2,7 @@ const TeleBot = require('telebot');
 const fs = require('fs');
 const DbHelper = require('./dbhelper');
 const dateformat = require('dateformat');
+const process = require('process');
 
 //TODO: added by
 //TODO: whitelist for /quote
@@ -9,12 +10,28 @@ const dateformat = require('dateformat');
 //TODO: /help in dm only
 
 
-process.on('unhandledRejection', (reason, p) => {
-    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
-    console.log(reason.stack);
-});
+    process.on('unhandledRejection', (reason, p) => {
+        console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+        console.log(reason.stack);
+    });
 
-const settings = JSON.parse(fs.readFileSync('settings.json'));
+
+const settingsfile = 'settings.json';
+var settings = undefined;
+try {
+    settings = JSON.parse(fs.readFileSync(settingsfile));
+} catch (e) {
+    console.log('settings file doesn\'t exist or malformed, a new one will be created', e);
+}
+
+settings = {
+    "token": "MISSING_TOKEN",
+    "quotes_per_page": 5,
+    "admins": [],
+    ...settings
+};
+saveSettingsSync();
+
 console.log('read settings.');
 
 var dbhelper = new DbHelper('data.db');
@@ -24,7 +41,12 @@ dbhelper.load(main);
 async function main() {
     console.log('database loaded.');
 
-    let token = fs.readFileSync(settings.token_location, 'utf8').trim();
+    let token = settings.token;
+    if (token == "MISSING_TOKEN") {
+        console.error('token in settings not set, please set the token, then restart');
+        process.exit(1);
+    }
+    token = token.trim();
     console.log('token read: "' + token + '"');
     let bot = new TeleBot(token);
 
@@ -170,7 +192,7 @@ async function main() {
     //#endregion
 
     //#region cope
-    bot.on(/(^|\s)[cс][oо][pр][eе](\s|$)/i, msg => {
+    bot.on(/(^|\s)[сc][^a-zA-Z0-9]*[оoｏο0][^a-zA-Z0-9]*[ррｐp][^a-zA-Z0-9]*[еeеｅ3](\s|$)/i, msg => {
         return msg.reply.sticker(copepack.stickers[0].file_id, { asReply: true });
     });
     //#endregion
@@ -214,4 +236,8 @@ function getHelpText() {
         "`user:name` - display quotes from a user with a specific first name or username.\n" +
         "`before|after:dd-mm-yyyy-HH-MM` - display quotes from before/after a specific date and time.\n\n" +
         "/help - display the message you're currently reading.";
+}
+
+function saveSettingsSync() {
+    fs.writeFileSync(settingsfile, JSON.stringify(settings));
 }
