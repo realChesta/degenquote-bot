@@ -199,7 +199,7 @@ async function main() {
 
     //#region LoliClout
     bot.on(/loli/i, msg => {
-        return msg.reply.text('@DefinitelyNotLoliClout', { asReply: true });
+        return msg.reply.text('@DefinitelyNotLoliClout @rikidere', { asReply: true });
     });
     //#endregion
 
