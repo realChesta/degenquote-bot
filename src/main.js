@@ -8,6 +8,7 @@ const process = require('process');
 //TODO: whitelist for /quote
 //TODO: shutdown command with whitelist
 //TODO: /help in dm only
+//TODO: subscribe feature
 
 
 process.on('unhandledRejection', (reason, p) => {
