@@ -9,7 +9,7 @@ const process = require('process');
 //TODO: shutdown command with whitelist
 //TODO: /help in dm only
 //TODO: subscribe feature
-
+//TODO: objectify settings
 
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
@@ -186,9 +186,20 @@ async function main() {
 
     //#region stop
     bot.on('/stop', msg => {
-        if (settings.admins.indexOf(msg.from.username) > -1) {
+        if (isAdmin(msg.from.username)) {
             bot.stop('shutting down...');
             return msg.reply.text('goodbye');
+        }
+        else
+            return msg.reply.text('You are not authorized to use this command.', { asReply: true });
+    });
+    //#endregion
+
+    //#region reload
+    bot.on('/reload', msg => {
+        if (isAdmin(msg.from.username)) {
+            settings = JSON.parse(fs.readFileSync(settingsfile));
+            return msg.reply.text('settings reloaded.');
         }
         else
             return msg.reply.text('You are not authorized to use this command.', { asReply: true });
@@ -198,6 +209,10 @@ async function main() {
     registerActions(settings.actions, bot);
 
     bot.start();
+}
+
+function isAdmin(username) {
+    return settings.admins.indexOf(username) > -1;
 }
 
 function registerActions(actions, bot) {
