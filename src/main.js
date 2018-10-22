@@ -220,7 +220,7 @@ function registerActions(actions, bot) {
         let action = actions[reg];
         bot.on(new RegExp(reg, 'i'), msg => {
 
-            if (action.probability > Math.random())
+            if (action.probability <= Math.random())
                 return;
 
             if (action.text)
