@@ -51,7 +51,7 @@ Quote-Bot can react to regexes with messages you configure. To do this, simply a
 * `"text"`: a text the bot should reply to the message that matched the regex
 * `"sticker"`: the id of a sticker the bot should reply to the matched message with
 
-**IMPORTANT:** only use `"text"` *or* `"sticker"`!
+**IMPORTANT:** only use `"text"` *or* `"sticker"` in one action!
 
 ## Usage
 
