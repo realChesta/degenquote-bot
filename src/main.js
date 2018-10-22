@@ -219,7 +219,10 @@ function registerActions(actions, bot) {
     for (reg in actions) {
         let action = actions[reg];
         bot.on(new RegExp(reg, 'i'), msg => {
-            console.log(action);
+
+            if (action.probability > Math.random())
+                return;
+
             if (action.text)
                 return msg.reply.text(action.text, { asReply: true });
             else if (action.sticker)
