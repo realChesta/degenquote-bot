@@ -28,7 +28,7 @@ Alternatively, create it yourself. It should look like the following:
 ```
 
 * `"token"`: your Telegram Bot API token
-* `"quotes_per_page"`: yow many quotes should be displayed per page with `/list`
+* `"quotes_per_page"`: how many quotes should be displayed per page with `/list`
 * `"admins"`: the usernames of the users who should be able to manage the bot *(can use `/stop` a.o.)*
 * `"actions"`: contains special configurable actions, see next section
 
