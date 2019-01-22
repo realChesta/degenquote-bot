@@ -16,6 +16,8 @@ process.on('unhandledRejection', (reason, p) => {
     console.log(reason.stack);
 });
 
+var shouldShutdown = false;
+var launchTime = new Date().getTime() / 1000;
 
 const settingsfile = 'settings.json';
 var settings = undefined;
@@ -87,6 +89,8 @@ async function main() {
 
     //#region list
     bot.on(/^\/list(\s+.+)*$/i, (msg, props) => {
+        if (shouldShutdown) return msg.reply.text("I'm shutting down right now, ask me again in a second");
+        
         let quotes = Object.values(dbhelper.quotes);
 
         //remove _id field
@@ -187,7 +191,11 @@ async function main() {
     //#region stop
     bot.on('/stop', msg => {
         if (isAdmin(msg.from.username)) {
-            bot.stop('shutting down...');
+            if (msg.date < launchTime) return msg.reply.text('you sent this before I booted, so I\'m ignoring it (sent at: ' + msg.date + ', boot time: ' + launchTime + ')');
+            if (shouldShutdown) return msg.reply.text('am already shutting down, gimme a second');
+            shouldShutdown = true;
+            console.log("shutting down in 1000ms");
+            setTimeout(() => bot.stop('shutting down...'), 1000);
             return msg.reply.text('goodbye');
         }
         else
