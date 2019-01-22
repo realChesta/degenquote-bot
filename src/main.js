@@ -16,6 +16,7 @@ process.on('unhandledRejection', (reason, p) => {
     console.log(reason.stack);
 });
 
+var shouldShutdown = false;
 
 const settingsfile = 'settings.json';
 var settings = undefined;
@@ -187,7 +188,10 @@ async function main() {
     //#region stop
     bot.on('/stop', msg => {
         if (isAdmin(msg.from.username)) {
-            bot.stop('shutting down...');
+            if (shouldShutdown) return msg.reply.text('am already shutting down, gimme a second');
+            shouldShutdown = true;
+            console.log("shutting down in 1000ms");
+            setTimeout(() => bot.stop('shutting down...'), 1000);
             return msg.reply.text('goodbye');
         }
         else
@@ -256,3 +260,4 @@ function getHelpText() {
 function saveSettingsSync() {
     fs.writeFileSync(settingsfile, JSON.stringify(settings, null, 4));
 }
+
