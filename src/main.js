@@ -6,7 +6,6 @@ const process = require('process');
 
 //TODO: added by
 //TODO: whitelist for /quote
-//TODO: shutdown command with whitelist
 //TODO: /help in dm only
 //TODO: subscribe feature
 //TODO: objectify settings
@@ -58,14 +57,14 @@ async function main() {
     bot.on('/start', (msg) => {
         return msg.reply.text(
             "Hi! I'm the Degenerate Quote Bot. I can store all your notable weeb quotes.\n" +
-            getHelpText(),
+            getHelpText(isAdmin(msg.from.username)),
             { parseMode: 'Markdown' });
     });
     //#endregion
 
     //#region help
     bot.on('/help', (msg) => {
-        return msg.reply.text(getHelpText(), { parseMode: 'Markdown' });
+        return msg.reply.text(getHelpText(isAdmin(msg.from.username)), { parseMode: 'Markdown' });
     });
     //#endregion
 
@@ -110,6 +109,8 @@ async function main() {
 
         let pages = Math.ceil(quotes.length / settings.quotes_per_page);
         let startPage = 0;
+
+        let show = null;
 
         let args = props.match.input.match(/^\/list(\s+.+)?$/i)[1];
 
@@ -177,6 +178,13 @@ async function main() {
 
                             break;
 
+                        case 'show':
+                            if (['id'].includes(matches[1]))
+                                show = matches[1];
+                            else
+                                return msg.reply.text("Invalid show argument.", { asReply: true });
+                            break;
+
                         default:
                             return msg.reply.text("Unknown argument: '" + matches[0] + "'. Please see /help for all available arguments.", { asReply: true });
                     }
@@ -190,8 +198,8 @@ async function main() {
 
         for (let i = startIndex; i < Math.min(startIndex + 5, quotes.length); i++) {
             if (quotes[i] !== "quotes")
-                list += createQuoteString(quotes[i], 3800 / settings.quotes_per_page);
-                // we make sure the message is not more than the 4096 char limit 
+                list += createQuoteString(quotes[i], show, 3800 / settings.quotes_per_page);
+            // we make sure the message is not more than the 4096 char limit 
         }
 
         return msg.reply.text(list, { parseMode: 'Markdown' });
@@ -224,6 +232,35 @@ async function main() {
     });
     //#endregion
 
+    //#region remove
+    bot.on(['/remove', '/delete'], (msg, props) => {
+        if (isAdmin(msg.from.username)) {
+            let ids = props.match.input.match(/\d+/gi)
+            let deleted = [];
+            let failed = [];
+            for (id of ids) {
+                if (dbhelper.removeQuote(id))
+                    deleted.push(id);
+                else
+                    failed.push(id);
+            }
+            let deltext = "";
+            if (deleted.length > 0) {
+                deltext += "Deleted the following quotes: " + deleted.join(', ') + '.';
+            }
+            if (failed.length > 0) {
+                if (deltext.length > 0)
+                    deltext += '\n\n';
+                deltext += "Couldn't delete the following quotes: " + failed.join(', ') + '.\n' +
+                    "(Double check your ids)";
+            }
+            return msg.reply.text(deltext, { asReply: true, parseMode: 'Markdown' });
+        }
+        else
+            return msg.reply.text('You are not authorized to use this command.', { asReply: true });
+    });
+    //#endregion
+
     registerActions(settings.actions, bot);
 
     bot.start();
@@ -249,10 +286,25 @@ function registerActions(actions, bot) {
     }
 }
 
-function createQuoteString(quote, maxlength) {
+function createQuoteString(quote, show, maxlength) {
     return "_\"" + deharmifyQuote(trimQuote(quote.text, maxlength)) + "\"_\n" +
         "-[" + dbhelper.users[quote.user].first_name + "](tg://user?id=" + quote.user + "), " +
-        dateformat(quote.date, "d.m.yy HH:MM") + "\n\n";
+        dateformat(quote.date, "d.m.yy HH:MM") + getShowInfo(quote, show) + "\n\n";
+}
+
+function getShowInfo(quote, show) {
+    if (!show)
+        return '';
+
+    let toReturn = " | ";
+
+    switch (show) {
+        case 'id':
+            toReturn += quote.id;
+            break;
+    }
+
+    return toReturn;
 }
 
 function deharmifyQuote(quote) {
@@ -270,15 +322,28 @@ function saveQuote(quote) {
     return dbhelper.saveQuote(quote.message_id, quote.text, quote.date * 1000, quote.from.id);
 }
 
-function getHelpText() {
-    return "To store a quote, reply to the message with /quote (/q).\n" +
+function getHelpText(admin) {
+    let help = "To store a quote, reply to the message with /quote (/q).\n" +
         "To view all stored quotes, use /list.\n\n" +
         "Here's my full command list:\n\n" +
         "/quote, /q - store the referenced message as a quote.\n\n" +
         "/list `[arg1, arg2, ...] [page]` - display stored quotes, one page at a time.\n" +
         "`user:name` - display quotes from a user with a specific first name or username.\n" +
-        "`before|after:dd-mm-yyyy-HH-MM` - display quotes from before/after a specific date and time.\n\n" +
+        "`before|after:dd-mm-yyyy-HH-MM` - display quotes from before/after a specific date and time.\n" +
+        "`show:[info]` - use this to show more information on quotes. Available info: `id`\n\n" +
         "/help - display the message you're currently reading.";
+
+    if (admin) {
+        help += '\n\n' +
+            "*Admin Commands*\nBecause you are an administrator," +
+            " you're allowed to use the following additional commands:\n\n" +
+            "/remove, /delete `[id1, id2, ...]` - deletes all given quotes.\n" +
+            "*WARNING:* there is no second confirmation, be cautious!\n\n" +
+            "/stop - stops the bot and ends the process.\n\n" +
+            "/reload - reloads settings without restarting the bot.";
+    }
+
+    return help;
 }
 
 function saveSettingsSync() {
