@@ -88,10 +88,10 @@ async function main() {
     //#endregion
 
     //#region list 
-    
+
     bot.on(/^\/list(\s+.+)?$/i, (msg, props) => {
         if (shouldShutdown) return msg.reply.text("I'm shutting down right now, ask me again in a second");
-        
+
         let quotes = Object.values(dbhelper.quotes);
 
         //remove _id field
@@ -117,61 +117,69 @@ async function main() {
 
         if (args) {
             args = args.trim();
-            let num = Number(args);
-            if (!isNaN(num)) {
-                //the argument is a number
-                if (num > pages || num < 1) {
-                    return msg.reply.text('I only have ' + pages +
-                        ' page' + (pages > 1 ? 's' : '') + ' worth of quotes. ' +
-                        'Please pick a number between 1 and ' + pages + '.', { asReply: true });
+            args = args.split(' ');
+            for (arg of args) {
+                let num = Number(arg);
+                if (!isNaN(num)) {
+                    //the argument is a number
+                    if (args.indexOf(arg) < args.length - 1) {
+                        return msg.reply.text('Page number is not last argument' +
+                            'or multiple page arguments, skipping request.',
+                            { asReply: true });
+                    }
+                    if (num > pages || num < 1) {
+                        return msg.reply.text('I only have ' + pages +
+                            ' page' + (pages > 1 ? 's' : '') + ' worth of quotes. ' +
+                            'Please pick a number between 1 and ' + pages + '.', { asReply: true });
+                    }
+                    else {
+                        startPage = num - 1;
+                    }
                 }
+                //argument is something else
                 else {
-                    startPage = num - 1;
-                }
-            }
-            //argument is something else
-            else {
-                let matches = args.match(/(\w+):(@?[\w-]+)/i);
-                if (!matches || (matches && matches.length < 3))
-                    return msg.reply.text("Invalid syntax. Please se /help for the correct usage of this command.", { asReply: true });
-                matches.splice(0, 1);
-                switch (matches[0]) {
-                    case 'user':
-                        matches[1] = matches[1].replace('@', '');
-                        let user = Object.values(dbhelper.users).find(u => {
-                            return (u !== "users") && (u.username && u.username.toLowerCase() == matches[1].toLowerCase() ||
-                                u.first_name && u.first_name.toLowerCase() == matches[1].toLowerCase());
-                        });
-                        if (!user)
-                            return msg.reply.text("I couldn't find any quoted users with that name or username!", { asReply: true });
-                        quotes = quotes.filter(q => {
-                            return q.user == user.id;
-                        });
-                        pages = Math.ceil(quotes.length / settings.quotes_per_page);
-                        suffix = ": " + user.first_name;
-                        break;
+                    let matches = arg.match(/(\w+):(@?[\w-]+)/i);
+                    if (!matches || (matches && matches.length < 3))
+                        return msg.reply.text("Invalid syntax. Please se /help for the correct usage of this command.", { asReply: true });
+                    matches.splice(0, 1);
+                    switch (matches[0]) {
+                        case 'user':
+                            matches[1] = matches[1].replace('@', '');
+                            let user = Object.values(dbhelper.users).find(u => {
+                                return (u !== "users") && (u.username && u.username.toLowerCase() == matches[1].toLowerCase() ||
+                                    u.first_name && u.first_name.toLowerCase() == matches[1].toLowerCase());
+                            });
+                            if (!user)
+                                return msg.reply.text("I couldn't find any quoted users with that name or username!", { asReply: true });
+                            quotes = quotes.filter(q => {
+                                return q.user == user.id;
+                            });
+                            pages = Math.ceil(quotes.length / settings.quotes_per_page);
+                            suffix = ": " + user.first_name;
+                            break;
 
-                    case 'before':
-                    case 'after':
-                        let rawtime = matches[1].split('-').map(Number);
-                        if (rawtime.length !== 5 || rawtime.some(isNaN))
-                            return msg.reply.text('wrong time format. Please use the following format: dd-mm-yyyy-HH-MM', { asReply: true });
+                        case 'before':
+                        case 'after':
+                            let rawtime = matches[1].split('-').map(Number);
+                            if (rawtime.length !== 5 || rawtime.some(isNaN))
+                                return msg.reply.text('wrong time format. Please use the following format: dd-mm-yyyy-HH-MM', { asReply: true });
 
-                        let date = new Date(rawtime[2], rawtime[1] - 1, rawtime[0], rawtime[3], rawtime[4]);
+                            let date = new Date(rawtime[2], rawtime[1] - 1, rawtime[0], rawtime[3], rawtime[4]);
 
-                        quotes = quotes.filter(q => {
-                            return (matches[0] === 'before') ? (q.date < date) : (q.date > date);
-                        });
-                        pages = Math.ceil(quotes.length / settings.quotes_per_page);
-                        suffix = ": " + matches[0] + " " + dateformat(date, "d. mmm. yyyy H:MM");
+                            quotes = quotes.filter(q => {
+                                return (matches[0] === 'before') ? (q.date < date) : (q.date > date);
+                            });
+                            pages = Math.ceil(quotes.length / settings.quotes_per_page);
+                            suffix = ": " + matches[0] + " " + dateformat(date, "d. mmm. yyyy H:MM");
 
-                        if (quotes.length === 0)
-                            return msg.reply.text("I have no quotes from " + matches[0] + " " + dateformat(date, 'mmmm dS yyyy "at" H:MM') + "!");
+                            if (quotes.length === 0)
+                                return msg.reply.text("I have no quotes from " + matches[0] + " " + dateformat(date, 'mmmm dS yyyy "at" H:MM') + "!");
 
-                        break;
+                            break;
 
-                    default:
-                        return msg.reply.text("Unknown argument: '" + matches[0] + "'. Please see /help for all available arguments.", { asReply: true });
+                        default:
+                            return msg.reply.text("Unknown argument: '" + matches[0] + "'. Please see /help for all available arguments.", { asReply: true });
+                    }
                 }
             }
         }
