@@ -56,6 +56,8 @@ class DbHelper {
                 quotes: 0
             };
 
+            this.users[userId].username = username;
+            this.users[userId].first_name = firstName;
             this.updateUserInDB(userId);
 
             return true;
