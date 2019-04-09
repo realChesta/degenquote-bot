@@ -271,7 +271,7 @@ function getHelpText() {
         "To view all stored quotes, use /list.\n\n" +
         "Here's my full command list:\n\n" +
         "/quote, /q - store the referenced message as a quote.\n\n" +
-        "/list `[argument]` - display stored quotes, one page at a time.\n" +
+        "/list `[arg1, arg2, ...] [page]` - display stored quotes, one page at a time.\n" +
         "`user:name` - display quotes from a user with a specific first name or username.\n" +
         "`before|after:dd-mm-yyyy-HH-MM` - display quotes from before/after a specific date and time.\n\n" +
         "/help - display the message you're currently reading.";
