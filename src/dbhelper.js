@@ -21,7 +21,8 @@ class DbHelper {
                 else
                     this.users = s_docs[0];
 
-                callback();
+                if (callback)
+                    callback();
             });
         });
     }
@@ -38,13 +39,32 @@ class DbHelper {
             if (this.users[userId])
                 this.users[userId].quotes++;
 
-            this.updateQuoteInDB(quoteId);
             this.updateUserInDB(userId);
+            this.updateQuoteInDB(quoteId);
+
 
             return true;
         }
         else
             return false;
+    }
+
+    removeQuote(quoteId) {
+        if (!this.quotes.hasOwnProperty(quoteId))
+            return false;
+
+        let userId = this.quotes[quoteId].user;
+        this.users[userId].quotes--;
+
+        this.updateUserInDB(userId);
+
+        let quoteObj = {};
+        quoteObj[quoteId] = this.quotes[quoteId];
+        this.database.update({ _id: this.quotes._id }, { $unset: quoteObj });
+
+        delete this.quotes[quoteId];
+
+        return true;
     }
 
     checkOrCreateUser(userId, username, firstName) {
