@@ -87,8 +87,9 @@ async function main() {
     });
     //#endregion
 
-    //#region list
-    bot.on(/^\/list(\s+.+)*$/i, (msg, props) => {
+    //#region list 
+    
+    bot.on(/^\/list(\s+.+)?$/i, (msg, props) => {
         if (shouldShutdown) return msg.reply.text("I'm shutting down right now, ask me again in a second");
         
         let quotes = Object.values(dbhelper.quotes);
@@ -110,7 +111,7 @@ async function main() {
         let pages = Math.ceil(quotes.length / settings.quotes_per_page);
         let startPage = 0;
 
-        let args = props.match[1];
+        let args = props.match.input.match(/^\/list(\s+.+)?$/i)[1];
 
         let suffix = '';
 
