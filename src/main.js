@@ -287,7 +287,7 @@ function registerActions(actions, bot) {
 }
 
 function createQuoteString(quote, show, maxlength) {
-    return "_\"" + deharmifyQuote(trimQuote(quote.text, maxlength)) + "\"_\n" +
+    return "_\"" + trimQuote(deharmifyQuote(quote.text, maxlength)) + "\"_\n" +
         "-[" + dbhelper.users[quote.user].first_name + "](tg://user?id=" + quote.user + "), " +
         dateformat(quote.date, "d.m.yy HH:MM") + getShowInfo(quote, show) + "\n\n";
 }
