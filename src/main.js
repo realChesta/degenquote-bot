@@ -190,7 +190,8 @@ async function main() {
 
         for (let i = startIndex; i < Math.min(startIndex + 5, quotes.length); i++) {
             if (quotes[i] !== "quotes")
-                list += createQuoteString(quotes[i]);
+                list += createQuoteString(quotes[i], 3800 / settings.quotes_per_page);
+                // we make sure the message is not more than the 4096 char limit 
         }
 
         return msg.reply.text(list, { parseMode: 'Markdown' });
@@ -248,10 +249,16 @@ function registerActions(actions, bot) {
     }
 }
 
-function createQuoteString(quote) {
-    return "_\"" + quote.text + "\"_\n" +
+function createQuoteString(quote, maxlength) {
+    return "_\"" + trimQuote(quote.text, maxlength) + "\"_\n" +
         "-[" + dbhelper.users[quote.user].first_name + "](tg://user?id=" + quote.user + "), " +
         dateformat(quote.date, "d.m.yy HH:MM") + "\n\n";
+}
+
+function trimQuote(text, maxlength) {
+    if (text.length > maxlength)
+        return text.substring(0, maxlength) + " [...]";
+    return text;
 }
 
 function saveQuote(quote) {
