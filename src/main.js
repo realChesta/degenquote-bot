@@ -250,9 +250,13 @@ function registerActions(actions, bot) {
 }
 
 function createQuoteString(quote, maxlength) {
-    return "_\"" + trimQuote(quote.text, maxlength) + "\"_\n" +
+    return "_\"" + deharmifyQuote(trimQuote(quote.text, maxlength)) + "\"_\n" +
         "-[" + dbhelper.users[quote.user].first_name + "](tg://user?id=" + quote.user + "), " +
         dateformat(quote.date, "d.m.yy HH:MM") + "\n\n";
+}
+
+function deharmifyQuote(quote) {
+    return quote.replace(/[()_*\[\]`]/gi, '{–}')
 }
 
 function trimQuote(text, maxlength) {
