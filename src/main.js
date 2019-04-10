@@ -91,7 +91,7 @@ async function main() {
     bot.on(/^\/list(\s+.+)?$/i, (msg, props) => {
         if (shouldShutdown) return msg.reply.text("I'm shutting down right now, ask me again in a second");
 
-        let quotes = Object.values(dbhelper.quotes);
+        let quotes = getQuotesByDate();
 
         //remove _id field
         let id_index = quotes.indexOf("quotes");
@@ -141,7 +141,7 @@ async function main() {
                 else {
                     let matches = arg.match(/(\w+):(@?[\w-]+)/i);
                     if (!matches || (matches && matches.length < 3))
-                        return msg.reply.text("Invalid syntax. Please se /help for the correct usage of this command.", { asReply: true });
+                        return msg.reply.text("Invalid syntax. Please see /help for the correct usage of this command.", { asReply: true });
                     matches.splice(0, 1);
                     switch (matches[0]) {
                         case 'user':
@@ -287,7 +287,7 @@ function registerActions(actions, bot) {
 }
 
 function createQuoteString(quote, show, maxlength) {
-    return "_\"" + trimQuote(deharmifyQuote(quote.text, maxlength)) + "\"_\n" +
+    return "_\"" + trimQuote(deharmifyQuote(quote.text), maxlength) + "\"_\n" +
         "-[" + dbhelper.users[quote.user].first_name + "](tg://user?id=" + quote.user + "), " +
         dateformat(quote.date, "d.m.yy HH:MM") + getShowInfo(quote, show) + "\n\n";
 }
@@ -315,6 +315,23 @@ function trimQuote(text, maxlength) {
     if (text.length > maxlength)
         return text.substring(0, maxlength) + " [...]";
     return text;
+}
+
+function getQuotesByDate() {
+    let quotes = Object.values(dbhelper.quotes);
+
+    //remove _id field
+    let id_index = quotes.indexOf("quotes");
+    if (id_index > -1) {
+        quotes.splice(id_index, 1);
+    }
+
+    //sort quotes by date
+    quotes.sort((a, b) => {
+        return b.date - a.date;
+    });
+
+    return quotes;
 }
 
 function saveQuote(quote) {
