@@ -93,17 +93,6 @@ async function main() {
 
         let quotes = getQuotesByDate();
 
-        //remove _id field
-        let id_index = quotes.indexOf("quotes");
-        if (id_index > -1) {
-            quotes.splice(id_index, 1);
-        }
-
-        //sort quotes by date
-        quotes.sort((a, b) => {
-            return b.date - a.date;
-        });
-
         if (quotes.length < 1)
             return msg.reply.text('There are no stored quotes yet.', { asReply: true });
 
