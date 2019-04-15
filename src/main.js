@@ -212,7 +212,7 @@ async function main() {
             `${users[2].quotes} quotes. The least quoted user is ${formatUser(users[users.length - 2].id)} ` +
             `with ${users[users.length - 2].quotes} quotes.`;
 
-        return msg.reply.text(text, { parseMode: 'Markdown' });
+        return msg.reply.text(text, { });
     });
     //#endregion
 
