@@ -200,6 +200,7 @@ async function main() {
         //TODO: add args to list most quoted users, words
 
         let users = Object.values(dbhelper.users).sort((a, b) => { return b.quotes - a.quotes; });
+        let quotes = Object.values(dbhelper.quotes);
 
         if (users.length < 4) {
             //TODO: maybe change this lazy way
@@ -212,7 +213,7 @@ async function main() {
             `${users[2].quotes} quotes. The least quoted user is ${formatUser(users[users.length - 2].id)} ` +
             `with ${users[users.length - 2].quotes} quotes.`;
 
-        return msg.reply.text(text, { });
+        return msg.reply.text(text, { parseMode: 'Markdown' });
     });
     //#endregion
 
