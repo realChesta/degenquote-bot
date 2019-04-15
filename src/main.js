@@ -201,6 +201,11 @@ async function main() {
 
         let users = Object.values(dbhelper.users).sort((a, b) => { return b.quotes - a.quotes; });
 
+        if (users.length < 4) {
+            //TODO: maybe change this lazy way
+            return msg.reply.text("Sorry, I don't have enough users to generate stats yet.", { asReply: true });
+        }
+
         let text = `Here are some stats: So far, I have saved ${quotes.length} quotes from ${users.length} users. ` +
             `From them, ${formatUser(users[0].id)} is the most quoted one with *${users[0].quotes}* quotes, ` +
             `followed by ${formatUser(users[1].id)} with ${users[1].quotes}, and ${formatUser(users[2].id)} with ` +
