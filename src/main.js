@@ -195,6 +195,22 @@ async function main() {
     });
     //#endregion
 
+    //#region stats
+    bot.on('/stats', msg => {
+        //TODO: add args to list most quoted users, words
+
+        let users = Object.values(dbhelper.users).sort((a, b) => { return b.quotes - a.quotes; });
+
+        let text = `Here are some stats: So far, I have saved ${quotes.length} quotes from ${users.length} users. ` +
+            `From them, ${formatUser(users[0].id)} is the most quoted one with *${users[0].quotes}* quotes, ` +
+            `followed by ${formatUser(users[1].id)} with ${users[1].quotes}, and ${formatUser(users[2].id)} with ` +
+            `${users[2].quotes} quotes. The least quoted user is ${formatUser(users[users.length - 2].id)} ` +
+            `with ${users[users.length - 2].quotes} quotes.`;
+
+        return msg.reply.text(text, { parseMode: 'Markdown' });
+    });
+    //#endregion
+
     //#region stop
     bot.on('/stop', msg => {
         if (isAdmin(msg.from.username)) {
@@ -277,8 +293,12 @@ function registerActions(actions, bot) {
 
 function createQuoteString(quote, show, maxlength) {
     return "_\"" + trimQuote(deharmifyQuote(quote.text), maxlength) + "\"_\n" +
-        "-[" + dbhelper.users[quote.user].first_name + "](tg://user?id=" + quote.user + "), " +
+        "-" + formatUser(quote.user) + ", " +
         dateformat(quote.date, "d.m.yy HH:MM") + getShowInfo(quote, show) + "\n\n";
+}
+
+function formatUser(userId) {
+    return "[" + dbhelper.users[userId].first_name + "](tg://user?id=" + userId + ")";
 }
 
 function getShowInfo(quote, show) {
@@ -350,6 +370,33 @@ function getHelpText(admin) {
     }
 
     return help;
+}
+
+function getTopWords() {
+    let quotes = Object.values(dbhelper.quotes);
+    let wordDict = {};
+    for (q of quotes) {
+        let words = q.text.match(/\w+/gi);
+        for (word of words) {
+            word = word.toLowerCase();
+            if (!wordDict.hasOwnProperty(word))
+                wordDict[word] = 1;
+            else
+                wordDict[word]++;
+        }
+    }
+    let wordList = []
+    for (word in wordDict) {
+        wordObj = {
+            word: word,
+            count: wordDict[word]
+        };
+        wordList.push(wordObj);
+    }
+    wordList = wordList.sort((a, b) => { return b.count - a.count });
+    for (let i = 0; i < 50; i++) {
+        console.log((i + 1) + ". " + wordList[i].word + " (" + wordList[i].count + "x)");
+    }
 }
 
 function saveSettingsSync() {
