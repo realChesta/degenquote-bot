@@ -216,18 +216,6 @@ async function main() {
         return msg.reply.text(text, { parseMode: 'Markdown' });
     });
     //#endregion
-    
-    //#region slap
-    bot.on('/slap', (msg) => {
-        if (!msg.reply_to_message)
-            return msg.reply.text('You want me to slap you?!', { asReply: true });
-        else if (msg.reply_to_message.from.username === "degenquote_bot")
-            return msg.reply.text("Am I a joke to you?!", { asReply: true });
-        else
-            return bot.sendMessage(msg.chat.id, "I slapped them for you.",
-                { replyToMessage: msg.reply_to_message.message_id });
-    });
-    //#endregion
 
     //#region stop
     bot.on('/stop', msg => {
