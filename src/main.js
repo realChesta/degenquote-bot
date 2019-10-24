@@ -85,6 +85,21 @@ async function main() {
                 { replyToMessage: msg.reply_to_message.message_id });
     });
     //#endregion
+    
+    //#region cite
+    bot.on(['/c', '/cite'], (msg) => {
+        const ids = props.match.input.match(/\d+/gi);
+        if (ids.length <= 0) {
+            return msg.reply.text('You must specify at least one ID.', { asReply: true });
+        }
+        
+        let list = '';
+        for (let id : ids) {
+            list += createQuoteString(dbhelper.quotes[id], '', 3800 / ids.length);
+        }
+        return msg.reply.text(list, { parseMode: 'Markdown' });
+    });
+    //#endregion
 
     //#region list 
 
@@ -246,7 +261,7 @@ async function main() {
     //#region remove
     bot.on(['/remove', '/delete'], (msg, props) => {
         if (isAdmin(msg.from.username)) {
-            let ids = props.match.input.match(/\d+/gi)
+            let ids = props.match.input.match(/\d+/gi);
             let deleted = [];
             let failed = [];
             for (id of ids) {
@@ -359,6 +374,7 @@ function getHelpText(admin) {
         "To view all stored quotes, use /list.\n\n" +
         "Here's my full command list:\n\n" +
         "/quote, /q - store the referenced message as a quote.\n\n" +
+        "/cite id1 [id2, ..., idn], /c - display the quotes with the given ID.\n\n" +
         "/list `[arg1, arg2, ...] [page]` - display stored quotes, one page at a time.\n" +
         "`user:name` - display quotes from a user with a specific first name or username.\n" +
         "`before|after:dd-mm-yyyy-HH-MM` - display quotes from before/after a specific date and time.\n" +
