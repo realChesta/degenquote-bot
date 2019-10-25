@@ -87,15 +87,15 @@ async function main() {
     //#endregion
     
     //#region cite
-    bot.on(['/c', '/cite'], (msg) => {
+    bot.on(/^\/c(ite)?(\s+\d+)+$/i, (msg, props) => {
         const ids = props.match.input.match(/\d+/gi);
         if (ids.length <= 0) {
             return msg.reply.text('You must specify at least one ID.', { asReply: true });
         }
         
         let list = '';
-        for (let id : ids) {
-            list += createQuoteString(dbhelper.quotes[id], '', 3800 / ids.length);
+        for (let id of ids) {
+            list += createQuoteString(dbhelper.quotes[+id], '', 3800 / ids.length);
         }
         return msg.reply.text(list, { parseMode: 'Markdown' });
     });
@@ -259,9 +259,10 @@ async function main() {
     //#endregion
 
     //#region remove
-    bot.on(['/remove', '/delete'], (msg, props) => {
+    bot.on(/^\/(remove|delete)(\s+\d+)+$/i, (msg, props) => {
         if (isAdmin(msg.from.username)) {
             let ids = props.match.input.match(/\d+/gi);
+console.log(props.match.input);
             let deleted = [];
             let failed = [];
             for (id of ids) {
