@@ -50,7 +50,7 @@ async function main() {
         return;
     }
     token = token.trim();
-    console.log('token read: "' + token + '"');
+    console.log('token read');
     let bot = new TeleBot(token);
 
     //#region start
