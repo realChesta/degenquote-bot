@@ -41,13 +41,13 @@ console.log('read settings.');
 
 const dbhelper = new DbHelper('data.db');
 dbhelper.load(main);
+console.log('database loaded.');
 
 const markovEntries = fs.existsSync(settings.markovFile) ? JSON.parse(fs.readFileSync(settings.markovFile)) : [];
 const markov = new Markov(markovEntries);
 console.log('markov loaded.');
 
 async function main() {
-    console.log('database loaded.');
 
     let token = settings.token;
     if (token == "MISSING_TOKEN") {

@@ -2,7 +2,7 @@ const startSym = '\t';
 const endSym = '\n';
 const syms = [startSym, endSym];
 
-const stemmer = a => !syms.includes(a) ? a.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : a;
+const stemmer = (...arr) => arr.map(a => !syms.includes(a) ? a.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() : a).join(' ');
 const sortComparator = (a, b) => a === b ? 0 : a === startSym ? -1 : b === startSym ? 1 : a === endSym ? -1 : b === endSym ? 1 : a.localeCompare(b);
 
 class Markov {
@@ -17,8 +17,26 @@ class Markov {
     generateMessage() {
         if (!this.map.size) return undefined;
         const msg = [];
-        for (let sym = startSym, lsym = startSym; sym != endSym; !syms.includes(sym) && msg.push(sym)) sym = [((b, c) => (a => a[Math.floor(Math.random() * a.length)])(Math.random() >= 1 / Math.sqrt(1 + c.length) ? c : b))(this.map.get(stemmer(sym)), this.map.get(`${stemmer(lsym)} ${stemmer(sym)}`)), lsym = sym][0];
+        for (let sym = startSym, lsym = startSym; sym != endSym; !syms.includes(sym) && msg.push(sym)) sym = [((b, c) => (a => a[Math.floor(Math.random() * a.length)])(Math.random() >= 1 / Math.sqrt(1 + c.length) ? c : b))(this.map.get(stemmer(sym)), this.map.get(stemmer(lsym, sym)) || []), lsym = sym][0];
         return msg.join(' ');
+    }
+
+    compress() {
+        // lossy
+        this.map = new Map([...this.map.entries()].map(a => [a[0], a[1].map(a => [a, Math.random()]).sort((a, b) => a[1] - b[1]).slice(0, 100).filter((a, i) => i <= 4 || Math.random() >= 0).map(a => a[0])]));
+        this.map = new Map([...this.map.entries()].filter(a => !a[0].match(/\s/) || a[1].length >= 2));
+        const reachable = new Set();
+        const stack = [stemmer(startSym), stemmer(startSym, startSym)];
+        while (stack.length > 0) {
+            const stem = stack.pop();
+            if (!this.map.has(stem)) continue;
+            if (reachable.has(stem)) continue;
+            reachable.add(stem);
+            const gotten = this.map.get(stem) || [];
+            stack.push(...gotten.map(a => stemmer(a)));
+            stack.push(...gotten.map(a => stemmer(stem, a)));
+        }
+        this.map = new Map([...this.map.entries()].filter(a => reachable.has(a[0])));
     }
 
     getEntries() {
@@ -56,9 +74,15 @@ if (require.main === module) {
             [...html.matchAll(/\<div class\=\"text\"\>(.*?)\<\/div\>/sg)].forEach(a => markov.addMessage(getMsg(a[1])));
             if ((i & (i-1)) === 0) console.error(`Read ${i} message files`);
         }
+        console.error('Compressing...');
+        markov.compress();
+        console.error('Getting entries...');
+        const entries = markov.getEntries();
+        console.error('Number of terms:', entries.length);
+        console.error('Number of terms with only one follow-up:', entries.filter(a => a[1].length <= 1).length);
         console.error('Some example messages:');
         for (let i = 0; i < 10; i++) console.error('  ' + markov.generateMessage());
-        console.log(JSON.stringify(markov.getEntries()));
+        console.log(JSON.stringify(entries));
     } else {
         const readline = require('readline');
         const rl = readline.createInterface({
