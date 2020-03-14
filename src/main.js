@@ -3,6 +3,7 @@ const fs = require('fs');
 const DbHelper = require('./dbhelper');
 const dateformat = require('dateformat');
 const process = require('process');
+const Markov = require('./markov');
 
 //TODO: added by
 //TODO: whitelist for /quote
@@ -15,11 +16,11 @@ process.on('unhandledRejection', (reason, p) => {
     console.log(reason.stack);
 });
 
-var shouldShutdown = false;
-var launchTime = new Date().getTime() / 1000;
+let shouldShutdown = false;
+let launchTime = new Date().getTime() / 1000;
 
 const settingsfile = 'settings.json';
-var settings = undefined;
+let settings = undefined;
 try {
     settings = JSON.parse(fs.readFileSync(settingsfile));
 } catch (e) {
@@ -31,15 +32,19 @@ settings = {
     "quotes_per_page": 5,
     "admins": [],
     "actions": {},
+    "markovFile": "markov.json",
     ...settings
 };
 saveSettingsSync();
 
 console.log('read settings.');
 
-var dbhelper = new DbHelper('data.db');
-
+const dbhelper = new DbHelper('data.db');
 dbhelper.load(main);
+
+const markovEntries = fs.existsSync(settings.markovFile) ? JSON.parse(fs.readFileSync(settings.markovFile)) : [];
+const markov = new Markov(markovEntries);
+console.log('markov loaded.');
 
 async function main() {
     console.log('database loaded.');
@@ -309,6 +314,8 @@ function registerActions(actions, bot) {
                 return msg.reply.text(action.text, { asReply: true });
             else if (action.sticker)
                 return msg.reply.sticker(action.sticker, { asReply: true });
+            else if (action.markov)
+                return msg.reply.text(markov.generateMessage(), { asReply: true });
         });
     }
 }
