@@ -3,3 +3,4 @@ token.txt
 data.db
 settings.json
 .DS_Store
+markov.json

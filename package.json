@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/main.js",
   "scripts": {
-    "start": "node src/main.js"
+    "start": "node src/main.js",
+    "markov": "node src/markov.js"
   },
   "author": "",
   "license": "ISC",
