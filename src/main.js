@@ -32,7 +32,8 @@ settings = {
     "quotes_per_page": 5,
     "admins": [],
     "actions": {},
-    "markovFile": "markov.json",
+    "markov_file": "markov.json",
+    "bot_handle": "degenquote_bot",
     ...settings
 };
 saveSettingsSync();
@@ -43,7 +44,7 @@ const dbhelper = new DbHelper('data.db');
 dbhelper.load(main);
 console.log('database loaded.');
 
-const markovEntries = fs.existsSync(settings.markovFile) ? JSON.parse(fs.readFileSync(settings.markovFile)) : [];
+const markovEntries = fs.existsSync(settings.markov_file) ? JSON.parse(fs.readFileSync(settings.markov_file)) : [];
 const markov = new Markov(markovEntries);
 console.log('markov loaded.');
 
@@ -80,7 +81,7 @@ async function main() {
         else if (!msg.reply_to_message.text)
             return bot.sendMessage(msg.chat.id, "I can't save non-text messages.",
                 { replyToMessage: msg.reply_to_message.message_id });
-        else if (msg.reply_to_message.from.username === "degenquote_bot")
+        else if (msg.reply_to_message.from.username === settings.bot_handle)
             return msg.reply.text("I can't save things I said.", { asReply: true });
         else if (saveQuote(msg.reply_to_message))
             return bot.sendMessage(msg.chat.id, "Quote saved.",
@@ -290,6 +291,14 @@ console.log(props.match.input);
         }
         else
             return msg.reply.text('You are not authorized to use this command.', { asReply: true });
+    });
+    //#endregion
+
+    //#region markov
+    bot.on('*', (msg) => {
+        if (msg.reply_to_message && msg.reply_to_message.from.username === settings.bot_handle) {
+            return msg.reply.text(markov.generateMessage(), { asReply: true });
+        }
     });
     //#endregion
 
