@@ -297,7 +297,10 @@ console.log(props.match.input);
     //#region markov
     bot.on('*', (msg) => {
         if (msg.reply_to_message && msg.reply_to_message.from.username === settings.bot_handle) {
-            return msg.reply.text(markov.generateMessage(), { asReply: true });
+            const repliedTo = msg.reply_to_message.reply_to_message;
+            if (!repliedTo || !repliedTo.reply_to_message || repliedTo.reply_to_message.from.username !== settings.bot_handle || Math.random() < 0.5) {
+                return msg.reply.text(markov.generateMessage(), { asReply: true });
+            }
         }
     });
     //#endregion
