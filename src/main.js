@@ -81,6 +81,16 @@ async function main() {
         else if (!msg.reply_to_message.text)
             return bot.sendMessage(msg.chat.id, "I can't save non-text messages.",
                 { replyToMessage: msg.reply_to_message.message_id });
+        else if (msg.reply_to_message.text.includes('Stored Quotes')
+                && msg.reply_to_message.text.includes('(page')
+                && msg.reply_to_message.text.includes('of'))
+            // Should roughly match quote lists. 
+            /** @todo More elegant way of detecting quote lists. */
+            return msg.reply.text(createQuoteString({
+                    text: 'To understand why recursion is bad you first need to understand why recursion is bad',
+                    user: 'Dominik',
+                    date: new Date(2020, 2, 19, 17, 8, 0, 0),
+                }, undefined, 3800 / settings.quotes_per_page));
         else if (saveQuote(msg.reply_to_message))
             return bot.sendMessage(msg.chat.id, "Quote saved.",
                 { replyToMessage: msg.reply_to_message.message_id });
