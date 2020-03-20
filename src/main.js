@@ -294,7 +294,9 @@ console.log(props.match.input);
 
     //#region markov
     bot.on('*', (msg) => {
-        if (msg.reply_to_message && msg.reply_to_message.from.username === settings.bot_handle && Math.random() < 0.5) {
+        if (msg.reply_to_message
+                && msg.reply_to_message.from.username === settings.bot_handle
+                && (msg.text.includes('?') || Math.random() < 0.4)) {
             return msg.reply.text(markov.generateMessage(), { asReply: true });
         }
     });
