@@ -29,7 +29,7 @@ class DbHelper {
         });
     }
 
-    saveQuote(chatId, msgId, text, date, userId) {
+    saveQuote(chatId, msgId, text, date, userId, quoterId) {
         const msgIdStr = msgId.toString(36);
         const chatIdStr = Math.abs(chatId).toString(36);
         const quoteId = (2 * msgIdStr.length + (chatIdStr < 0)).toString(36) + msgIdStr + chatIdStr;
@@ -40,7 +40,8 @@ class DbHelper {
                 text: text,
                 date: date,
                 user: userId,
-                chatId: chatId,  // might not exist on older quotes
+                chatId: chatId,         // might not exist on older quotes
+                quoterId: quoterId,     // might not exist on older quotes
             };
 
             if (this.users[userId])

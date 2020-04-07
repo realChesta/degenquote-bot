@@ -444,9 +444,9 @@ function getQuotesByDate() {
     return quotes;
 }
 
-function saveQuote(quote) {
+function saveQuote(quote, quoter) {
     dbhelper.checkOrCreateUser(quote.from.id, quote.from.username, quote.from.first_name);
-    return dbhelper.saveQuote(quote.chat.id, quote.message_id, quote.text, quote.date * 1000, quote.from.id);
+    return dbhelper.saveQuote(quote.chat.id, quote.message_id, quote.text, quote.date * 1000, quote.from.id, quoter.id);
 }
 
 function getHelpText(admin) {
