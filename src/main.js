@@ -16,6 +16,7 @@ process.on('unhandledRejection', (reason, p) => {
     console.log(reason.stack);
 });
 
+let uidCount = Math.floor(Math.random() * 100000);
 let shouldShutdown = false;
 let launchTime = new Date().getTime() / 1000;
 
@@ -76,13 +77,14 @@ async function main() {
 
     //#region quote
     bot.on(['/q', '/quote'], (msg) => {
+        console.log(`/q called!`, JSON.stringify(msg));
         if (!msg.reply_to_message)
             return msg.reply.text('Please refer to a message.', { asReply: true });
         else if (!msg.reply_to_message.text)
             return bot.sendMessage(msg.chat.id, "I can't save non-text messages.",
                 { replyToMessage: msg.reply_to_message.message_id });
         else if (saveQuote(msg.reply_to_message))
-            return bot.sendMessage(msg.chat.id, "Quote saved.",
+            return bot.sendMessage(msg.chat.id, `Thanks ${getUserDisplay(msg.from)}, quote saved.`,
                 { replyToMessage: msg.reply_to_message.message_id });
         else
             return bot.sendMessage(msg.chat.id, "I already have that quote saved.",
@@ -91,36 +93,46 @@ async function main() {
     //#endregion
     
     //#region cite
-    bot.on(/^\/c(ite)?(\s+\d+)+$/i, (msg, props) => {
-        const ids = props.match.input.match(/\d+/gi);
+    bot.on(/^\/c(ite)?((\s+[0-9a-z]+)+)$/i, (msg, props) => {
+        const ids = props.match[2].match(/[0-9a-z]+/gi);
         if (ids.length <= 0) {
             return msg.reply.text('You must specify at least one ID.', { asReply: true });
         }
         
         let list = '';
         for (let id of ids) {
-            list += createQuoteString(dbhelper.quotes[+id], '', 3800 / ids.length);
+            const quote = dbhelper.quotes[id];
+            if (!quote || !hasAccessToQuote(msg.chat, msg.from.id, quote)) {
+                return msg.reply.text(`There's no quote with id ${id}!`);
+            }
+            list += createQuoteString(quote, '', 3800 / ids.length);
         }
         return msg.reply.text(list, { parseMode: 'Markdown' });
     });
     //#endregion
 
-    //#region list 
-
-    bot.on(/^\/list(\s+.+)?$/i, (msg, props) => {
+    //#region list
+    bot.on(/^\/(admin)?list(\s+.+)?$/i, (msg, props) => {
         if (shouldShutdown) return msg.reply.text("I'm shutting down right now, ask me again in a second");
 
-        let quotes = getQuotesByDate();
+        const match = props.match.input.match(/^\/(admin)?list(\s+.+)?$/i);
+        const isAdminList = match[1] === 'admin';
 
-        if (quotes.length < 1)
-            return msg.reply.text('There are no stored quotes yet.', { asReply: true });
+        if (isAdminList && msg.chat.type !== 'private') {
+            return msg.reply.text(`/adminlist can only be used in private chats with me!`);
+        }
+
+        let quotes = getQuotesByDate();
+        if (!isAdminList) {
+            quotes = quotes.filter(a => hasAccessToQuote(msg.chat, msg.from.id, a))
+        }
 
         let pages = Math.ceil(quotes.length / settings.quotes_per_page);
         let startPage = 0;
 
         let show = null;
 
-        let args = props.match.input.match(/^\/list(\s+.+)?$/i)[1];
+        let args = match[2];
 
         let suffix = '';
 
@@ -200,6 +212,9 @@ async function main() {
             }
         }
 
+        if (quotes.length < 1)
+            return msg.reply.text('There are no stored quotes in this chat.', { asReply: true });
+
         let list = "*Stored Quotes" + suffix + "* (page " + (startPage + 1) + " of " + pages + ")\n\n";
 
         let startIndex = startPage * settings.quotes_per_page;
@@ -218,8 +233,13 @@ async function main() {
     bot.on('/stats', msg => {
         //TODO: add args to list most quoted users, words
 
-        let users = Object.values(dbhelper.users).sort((a, b) => { return b.quotes - a.quotes; });
-        let quotes = Object.values(dbhelper.quotes);
+        let quotes = Object.values(dbhelper.quotes).filter(a => a !== 'quotes').filter(a => hasAccessToQuote(msg.chat, msg.from.id, a));
+        let users = [
+            ...quotes.reduce(
+                (map, a) => (map.set(a.user, (map.get(a.user) || 0) + 1)),
+                new Map()
+            ).entries()
+        ].sort((a, b) => b[1] - a[1]);
 
         if (users.length < 4) {
             //TODO: maybe change this lazy way
@@ -227,10 +247,10 @@ async function main() {
         }
 
         let text = `Here are some stats: So far, I have saved ${quotes.length} quotes from ${users.length} users. ` +
-            `From them, ${formatUser(users[0].id)} is the most quoted one with *${users[0].quotes}* quotes, ` +
-            `followed by ${formatUser(users[1].id)} with ${users[1].quotes}, and ${formatUser(users[2].id)} with ` +
-            `${users[2].quotes} quotes. The least quoted user is ${formatUser(users[users.length - 2].id)} ` +
-            `with ${users[users.length - 2].quotes} quotes.`;
+            `From them, ${formatUser(users[0][0])} is the most quoted one with *${users[0][1]}* quotes, ` +
+            `followed by ${formatUser(users[1][0])} with ${users[1][1]}, and ${formatUser(users[2][0])} with ` +
+            `${users[2][1]} quotes. The least quoted user is ${formatUser(users[users.length - 1][0])} ` +
+            `with ${users[users.length - 1][1]} quotes.`;
 
         return msg.reply.text(text, { parseMode: 'Markdown' });
     });
@@ -239,7 +259,10 @@ async function main() {
     //#region stop
     bot.on('/stop', msg => {
         if (isAdmin(msg.from.username)) {
-            if (msg.date < launchTime) return msg.reply.text('you sent this before I booted, so I\'m ignoring it (sent at: ' + msg.date + ', boot time: ' + launchTime + ')');
+            if (msg.date < launchTime) return msg.reply.text(
+                'You sent this before I booted, so I\'m ignoring it (sent at: ' + msg.date + ', boot time: ' +
+                launchTime + ')'
+            );
             if (shouldShutdown) return msg.reply.text('am already shutting down, gimme a second');
             shouldShutdown = true;
             console.log("shutting down in 1000ms");
@@ -262,11 +285,29 @@ async function main() {
     });
     //#endregion
 
+    //#region setcluster
+    bot.on(/^\/setcluster(\s+([a-zA-Z0-9:]+))?\s*$/i, (msg, props) => {
+        if (!isAdmin(msg.from.username)) {
+            return msg.reply.text('You are not authorized to use this command.', { asReply: true });
+        }
+
+        if (!props.match[1]) {  
+            dbhelper.resetChatCluster(msg.chat.id);
+            return msg.reply.text(`Chat cluster has been reset!`);
+        }
+
+        const clusterName = props.match[2];
+        if (!clusterName.startsWith(`cluster:`)) return msg.reply.text(`Cluster name must start with 'cluster:'!`);
+
+        dbhelper.setChatCluster(msg.chat.id, clusterName);
+        return msg.reply.text(`Chat cluster has been set to ${clusterName}!`);
+    });
+    //#endregion
+
     //#region remove
-    bot.on(/^\/(remove|delete)(\s+\d+)+$/i, (msg, props) => {
+    bot.on(/^\/(remove|delete)((\s+[0-9a-z]+)+)$/i, (msg, props) => {
         if (isAdmin(msg.from.username)) {
-            let ids = props.match.input.match(/\d+/gi);
-console.log(props.match.input);
+            let ids = props.match[2].match(/[0-9a-z]+/gi);
             let deleted = [];
             let failed = [];
             for (id of ids) {
@@ -296,9 +337,22 @@ console.log(props.match.input);
     bot.on('*', (msg) => {
         if (msg.reply_to_message
                 && msg.reply_to_message.from.username === settings.bot_handle
-                && (msg.text.includes('?') || Math.random() < 0.4)) {
+                && (msg.text.includes('?') || Math.random() < 0.1)) {
             return msg.reply.text(markov.generateMessage(), { asReply: true });
         }
+    });
+    //#endregion
+
+    //#region idinfo
+    bot.on('/idinfo', (msg) => {
+        const cluster = dbhelper.getChatCluster(msg.chat.id);
+        return msg.reply.text(`
+            Chat name: ${msg.chat.title || msg.chat.username || msg.chat.first_name}
+            Chat id: ${msg.chat.id}
+            Chat type: ${msg.chat.type}
+            Chat cluster id: ${cluster}
+            Adjacent chats in cluster: ${dbhelper.getAllChatsOfCluster(cluster).join(', ')}
+        `.split('\n').map(a => a.trim()).join('\n'), { asReply: true });
     });
     //#endregion
 
@@ -335,8 +389,17 @@ function createQuoteString(quote, show, maxlength) {
         dateformat(quote.date, "d.m.yy HH:MM") + getShowInfo(quote, show) + "\n\n";
 }
 
+function hasAccessToQuote(chat, senderId, quote) {
+    const clusterId = dbhelper.getChatCluster(chat.id);
+    const chats = dbhelper.getAllChatsOfCluster(clusterId);
+    return chats.includes(quote.chatId)
+        || (quote.chatId === undefined && clusterId === 'cluster:original')
+        || (chat.type === 'private' && quote.user === senderId);
+}
+
 function formatUser(userId) {
-    return "[" + dbhelper.users[userId].first_name + "](tg://user?id=" + userId + ")";
+    const user = dbhelper.users[userId];
+    return "[" + (user && user.first_name) + "](tg://user?id=" + userId + ")";
 }
 
 function getShowInfo(quote, show) {
@@ -347,7 +410,7 @@ function getShowInfo(quote, show) {
 
     switch (show) {
         case 'id':
-            toReturn += quote.id;
+            toReturn += `id: ${quote.id}`;
             break;
     }
 
@@ -383,7 +446,7 @@ function getQuotesByDate() {
 
 function saveQuote(quote) {
     dbhelper.checkOrCreateUser(quote.from.id, quote.from.username, quote.from.first_name);
-    return dbhelper.saveQuote(quote.message_id, quote.text, quote.date * 1000, quote.from.id);
+    return dbhelper.saveQuote(quote.chat.id, quote.message_id, quote.text, quote.date * 1000, quote.from.id);
 }
 
 function getHelpText(admin) {
@@ -396,6 +459,7 @@ function getHelpText(admin) {
         "`user:name` - display quotes from a user with a specific first name or username.\n" +
         "`before|after:dd-mm-yyyy-HH-MM` - display quotes from before/after a specific date and time.\n" +
         "`show:[info]` - use this to show more information on quotes. Available info: `id`\n\n" +
+        "/idinfo - display a bunch of id information of this chat.\n\n" +
         "/help - display the message you're currently reading.";
 
     if (admin) {
@@ -405,10 +469,16 @@ function getHelpText(admin) {
             "/remove, /delete `[id1, id2, ...]` - deletes all given quotes.\n" +
             "*WARNING:* there is no second confirmation, be cautious!\n\n" +
             "/stop - stops the bot and ends the process.\n\n" +
+            "/adminlist - shows ALL quotes from all chats. Takes the same arguments as /list.\n\n" +
+            "/setcluster `[clusterid]` - set the current chat's cluster to the passed argument (empty to reset).\n\n" +
             "/reload - reloads settings without restarting the bot.";
     }
 
     return help;
+}
+
+function getUserDisplay(user) {
+    return user.username ? `@${user.username}` : user.first_name.replace('@', '(at)');
 }
 
 function getTopWords() {
