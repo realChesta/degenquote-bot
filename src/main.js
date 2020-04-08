@@ -366,6 +366,8 @@ function registerActions(actions, bot) {
 
             if (action.probability <= Math.random())
                 return;
+            if (action.cluster && action.cluster !== dbhelper.getChatCluster(msg.chat.id))
+                return;
 
             if (action.text)
                 return replyToMessage(msg, action.text);
