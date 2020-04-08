@@ -503,7 +503,7 @@ function getTopWords() {
 }
 
 function replyToMessage(replyTo, text, options = {}) {
-    bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.id, parse_mode: options.parseMode});
+    bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
 }
 
 function saveSettingsSync() {
