@@ -34,6 +34,7 @@ settings = {
     "admins": [],
     "actions": {},
     "markov_file": "markov.json",
+    "enable_markov_for_clusters": ["cluster:original"],
     "bot_handle": "degenquote_bot",
     ...settings
 };
@@ -331,9 +332,10 @@ async function main() {
 
     //#region markov
     bot.onText(/[^]*/, (msg) => {
-        if (msg.reply_to_message
+        if (settings.enable_markov_for_clusters.includes(dbhelper.getChatCluster(msg.chat.id))
+                && msg.reply_to_message
                 && msg.reply_to_message.from.username === settings.bot_handle
-                && (msg.text.includes('?') || Math.random() < 0.1)) {
+                && (msg.text.includes('?') || Math.random() < 0.4)) {
             return replyToMessage(msg, markov.generateMessage());
         }
     });
@@ -365,6 +367,8 @@ function registerActions(actions, bot) {
         bot.onText(new RegExp(reg, 'i'), msg => {
 
             if (action.probability <= Math.random())
+                return;
+            if (action.cluster && action.cluster !== dbhelper.getChatCluster(msg.chat.id))
                 return;
 
             if (action.text)
