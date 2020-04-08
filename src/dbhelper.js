@@ -5,6 +5,8 @@ class DbHelper {
         this.filename = filename;
         this.quotes = { _id: 'quotes' };
         this.users = { _id: 'users' };
+        this.clusters = { _id: 'clusters' };
+        this.chats = { _id: 'chats' };
     }
 
     load(callback) {
@@ -27,13 +29,19 @@ class DbHelper {
         });
     }
 
-    saveQuote(quoteId, text, date, userId) {
-        if (!this.quotes.hasOwnProperty(quoteId)) {
+    saveQuote(chatId, msgId, text, date, userId, quoterId) {
+        const msgIdStr = msgId.toString(36);
+        const chatIdStr = Math.abs(chatId).toString(36);
+        const quoteId = (2 * msgIdStr.length + (chatIdStr < 0)).toString(36) + msgIdStr + chatIdStr;
+        const oldQuoteId = msgId;
+        if (!this.quotes.hasOwnProperty(quoteId) && !this.quotes.hasOwnProperty(oldQuoteId)) {
             this.quotes[quoteId] = {
                 id: quoteId,
                 text: text,
                 date: date,
-                user: userId
+                user: userId,
+                chatId: chatId,         // might not exist on older quotes
+                quoterId: quoterId,     // might not exist on older quotes
             };
 
             if (this.users[userId])
@@ -90,12 +98,54 @@ class DbHelper {
         }
     }
 
+    getChatCluster(chatId) {
+        const clusterId = this.chats[chatId] && this.chats[chatId].cluster;
+        return clusterId || `chat:${chatId}`;
+    }
+
+    resetChatCluster(chatId) {
+        if (!this.chats[chatId]) return;
+        const clusterId = this.chats[chatId].cluster;
+        delete this.chats[chatId].cluster;
+        this.clusters[clusterId] = this.clusters[clusterId].filter(a => a !== chatId);
+    }
+
+    setChatCluster(chatId, clusterId) {
+        if (!clusterId.startsWith(`cluster:`)) throw new Error(`Cluster name must start with 'cluster:'!`);
+        this.resetChatCluster(chatId);
+
+        if (!this.clusters[clusterId]) this.clusters[clusterId] = [];
+        this.clusters[clusterId].push(chatId);
+        this.updateClusterInDB(clusterId);
+        
+        if (!this.chats[chatId]) this.chats[chatId] = {};
+        this.chats[chatId].cluster = clusterId;
+        this.updateClusterInDB(chatId);
+    }
+
+    getAllChatsOfCluster(clusterId) {
+        if (clusterId.startsWith(`chat:`)) {
+            return [Number(clusterId.substr(5))];
+        } else if (clusterId.startsWith(`cluster:`)) {
+            return this.clusters[clusterId];
+        }
+        throw new Error(`Unknown cluster ID ${clusterId}!`);
+    }
+
     updateUserInDB(userId) {
         this.updateInDB('users', this.users, userId);
     }
 
     updateQuoteInDB(quoteId) {
         this.updateInDB('quotes', this.quotes, quoteId);
+    }
+
+    updateClusterInDB(clusterId) {
+        this.updateInDB('clusters', this.clusters, clusterId);
+    }
+
+    updateChatInDB(chatId) {
+        this.updateInDB('chats', this.chats, chatId);
     }
 
     updateInDB(_id, container, objId) {
