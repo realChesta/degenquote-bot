@@ -83,7 +83,7 @@ async function main() {
         else if (!msg.reply_to_message.text)
             return bot.sendMessage(msg.chat.id, "I can't save non-text messages.",
                 { replyToMessage: msg.reply_to_message.message_id });
-        else if (saveQuote(msg.reply_to_message))
+        else if (saveQuote(msg.reply_to_message, msg.from))
             return bot.sendMessage(msg.chat.id, `Thanks ${getUserDisplay(msg.from)}, quote saved.`,
                 { replyToMessage: msg.reply_to_message.message_id });
         else
