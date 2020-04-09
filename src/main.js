@@ -63,7 +63,7 @@ console.log('bot loaded.');
 
 async function main() {
     //#region start
-    bot.onText(/\/start/, (msg) => {
+    bot.onText(/^\/start/, (msg) => {
         return replyToMessage(msg, 
             "Hi! I'm the Degen Quote Bot. I can store all your notable quotes.\n" +
             getHelpText(isAdmin(msg.from.username)),
@@ -72,13 +72,13 @@ async function main() {
     //#endregion
 
     //#region help
-    bot.onText(/\/help/, (msg) => {
+    bot.onText(/^\/help/, (msg) => {
         return replyToMessage(msg, getHelpText(isAdmin(msg.from.username)), { parseMode: 'Markdown' });
     });
     //#endregion
 
     //#region quote
-    bot.onText(/\/q(oute)?/, (msg) => {
+    bot.onText(/^\/q(oute)?/, (msg) => {
         console.log(`/q called!`, JSON.stringify(msg));
         if (!msg.reply_to_message)
             return replyToMessage(msg, 'Please refer to a message.');
@@ -227,7 +227,7 @@ async function main() {
     //#endregion
 
     //#region stats
-    bot.onText(/\/stats/, msg => {
+    bot.onText(/^\/stats/, msg => {
         //TODO: add args to list most quoted users, words
 
         let quotes = Object.values(dbhelper.quotes).filter(a => a !== 'quotes').filter(a => hasAccessToQuote(msg.chat, msg.from.id, a));
@@ -254,7 +254,7 @@ async function main() {
     //#endregion
 
     //#region stop
-    bot.onText(/\/stop/, msg => {
+    bot.onText(/^\/stop/, msg => {
         if (isAdmin(msg.from.username)) {
             if (msg.date < launchTime) return replyToMessage(msg, 
                 'You sent this before I booted, so I\'m ignoring it (sent at: ' + msg.date + ', boot time: ' +
@@ -272,7 +272,7 @@ async function main() {
     //#endregion
 
     //#region reload
-    bot.onText(/\/reload/, msg => {
+    bot.onText(/^\/reload/, msg => {
         if (isAdmin(msg.from.username)) {
             settings = JSON.parse(fs.readFileSync(settingsfile));
             return replyToMessage(msg, 'settings reloaded.');
@@ -342,7 +342,7 @@ async function main() {
     //#endregion
 
     //#region idinfo
-    bot.onText(/\/idinfo/, (msg) => {
+    bot.onText(/^\/idinfo/, (msg) => {
         const cluster = dbhelper.getChatCluster(msg.chat.id);
         return replyToMessage(msg, `
             Chat name: ${msg.chat.title || msg.chat.username || msg.chat.first_name}
