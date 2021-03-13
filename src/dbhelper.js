@@ -23,8 +23,22 @@ class DbHelper {
                 else
                     this.users = s_docs[0];
 
-                if (callback)
-                    callback();
+                this.database.find({ _id: 'clusters' }, (s_err, s_docs) => {
+                    if (s_docs.length === 0)
+                        this.database.insert(this.clusters);
+                    else
+                        this.clusters = s_docs[0];
+
+                    this.database.find({ _id: 'chats' }, (s_err, s_docs) => {
+                        if (s_docs.length === 0)
+                            this.database.insert(this.chats);
+                        else
+                            this.chats = s_docs[0];
+
+                        if (callback)
+                            callback();
+                    });
+                });
             });
         });
     }
