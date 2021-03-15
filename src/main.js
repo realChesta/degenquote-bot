@@ -5,6 +5,7 @@ const dateformat = require('dateformat');
 const process = require('process');
 const Markov = require('./markov');
 const {updateActionsObject, checkMatchPredicate} = require('./actions.js');
+const { GPT2 } = require('./gpt2');
 
 //TODO: added by
 //TODO: whitelist for /quote
@@ -41,9 +42,10 @@ settings = {
     "token": "MISSING_TOKEN",
     "quotes_per_page": 5,
     "admins": [],
-    "actions": {},
+    "actions": [],
     "markov_file": "markov.json",
     "enable_markov_for_clusters": ["cluster:original"],
+    "enable_gpt2_for_clusters": [],
     "bot_handle": "degenquote_bot",
     ...settings
 };
@@ -59,6 +61,9 @@ console.log('database loaded.');
 const markovEntries = fs.existsSync(settings.markov_file) ? JSON.parse(fs.readFileSync(settings.markov_file)) : [];
 const markov = new Markov(markovEntries);
 console.log('markov loaded.');
+
+const gpt2 = new GPT2();
+console.log('gpt2 loaded.');
 
 let token = settings.token;
 if (token == "MISSING_TOKEN") {
@@ -385,8 +390,19 @@ async function main() {
         if (settings.enable_markov_for_clusters.includes(dbhelper.getChatCluster(msg.chat.id))
                 && msg.reply_to_message
                 && msg.reply_to_message.from.username === settings.bot_handle
-                && (msg.text.includes('?') || Math.random() < 0.4)) {
+                && (msg.text.includes('?') || Math.random() < 0.6)) {
             return replyToMessage(msg, markov.generateMessage());
+        }
+    });
+    //#endregion
+
+    //#region gpt2
+    bot.onText(/[^]*/, async (msg) => {
+        if (settings.enable_gpt2_for_clusters.includes(dbhelper.getChatCluster(msg.chat.id))
+                && msg.reply_to_message
+                && msg.reply_to_message.from.username === settings.bot_handle
+                && (msg.text.includes('?') || Math.random() < 0.6)) {
+            return replyToMessage(msg, await gpt2.generateMessage(msg));
         }
     });
     //#endregion
@@ -413,7 +429,9 @@ function isAdmin(username) {
 
 function registerActions(actions, bot) {
     bot.on('message', msg => {
+
         dbhelper.updateChatInfo(msg.chat);
+        gpt2.registerMessage(msg);
 
         const satisfiedGroups = new Set();
         for (const itAction of actions) {
@@ -438,6 +456,8 @@ function registerActions(actions, bot) {
 
             if (action.response === 'markov') {
                 replyToMessage(msg, markov.generateMessage());
+            } else if (action.response === 'gpt2') {
+                gpt2.generateMessage(msg).then(response => replyToMessage(msg, response));
             } else if (action.response[0] === 'text') {
                 replyToMessage(msg, action.response[1]);
             } else if (action.response[0] === 'sticker') {
