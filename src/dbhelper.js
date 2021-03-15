@@ -112,6 +112,13 @@ class DbHelper {
         }
     }
 
+    getAllChats() {
+        return Object.fromEntries(Object.entries(this.chats).map(a => [a[0], {
+            name: a[1].name,
+            cluster: a[1].cluster,
+        }]));
+    }
+
     getChatCluster(chatId) {
         const clusterId = this.chats[chatId] && this.chats[chatId].cluster;
         return clusterId || `chat:${chatId}`;
@@ -144,6 +151,12 @@ class DbHelper {
             return this.clusters[clusterId];
         }
         throw new Error(`Unknown cluster ID ${clusterId}!`);
+    }
+
+    updateChatInfo(chat) {
+        if (chat.id in this.chats) {
+            this.chats[chat.id].name = chat.title || chat.username || '$Unnammed';
+        }
     }
 
     updateUserInDB(userId) {
