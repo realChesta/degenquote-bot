@@ -7,7 +7,8 @@
     "start": "node src/main.js",
     "markov": "node src/markov.js",
     "test": "jest src",
-    "test:watch": "jest --watch src"
+    "test:watch": "jest --watch src",
+    "gpt2": "node src/gpt2.js"
   },
   "author": "",
   "license": "ISC",

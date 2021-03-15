@@ -13,6 +13,8 @@ $ npm install
 $ npm start
 ```
 
+For the GPT-2 features, you will need to install Tensorflow 1.15 (2.0 is not supported currently) and [GPT-2-Simple](https://github.com/minimaxir/gpt-2-simple) and feed the trained checkpoint into `src/gpt2/checkpoint/run1`.
+
 ## Configuration
 
 Run the bot once to create an empty `settings.json`. 
@@ -25,6 +27,8 @@ Alternatively, create it yourself. It should look like the following:
     "quotes_per_page": 5,
     "admins": [],
     "actions": [],
+    "enable_markov_for_clusters": [],
+    "enable_gpt2_for_clusters": [],
     "markov_file": "markov.json",
     "bot_handle": "my_tg_bot_handle_bot"
 }
@@ -34,6 +38,7 @@ Alternatively, create it yourself. It should look like the following:
 * `"quotes_per_page"`: how many quotes should be displayed per page with `/list`
 * `"admins"`: the usernames of the users who should be able to manage the bot *(can use `/stop` a.o.)*
 * `"actions"`: contains special configurable actions, see next section
+* `"enable_markov_for_clusters"`: list of clusters in which the bot will respond with markov messages when replied to
 * `"markov_file"`: the path to the Markov chain file
 * `"bot_handle"`: the bot handle
 
@@ -78,7 +83,7 @@ Example:
                 "first_name": "^Bill$",
                 "last_name": "^(Gates|Clinton)$"
             },
-            "date": [">= 1751117820"]
+            "date": ["obj >= 1751117820"]
         },
         "probability": 0.5,
         "response": [
@@ -105,6 +110,7 @@ Match predicates are special values that will be compared to the raw message obj
 * `["image", imageurl]`: reply with an image from the internet
 * `["video", videourl]`: reply with a video from the internet
 * `"markov"`: reply with a markov chain message
+* `"gpt2"`: reply with a GPT-2 message
 
 
 ## Usage
