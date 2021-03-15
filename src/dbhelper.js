@@ -113,7 +113,7 @@ class DbHelper {
     }
 
     getAllChats() {
-        return Object.fromEntries(Object.entries(this.chats).map(a => [a[0], {
+        return Object.fromEntries(Object.entries(this.chats).filter(a => a !== '_id').map(a => [a[0], {
             name: a[1].name,
             cluster: a[1].cluster,
         }]));
@@ -129,6 +129,8 @@ class DbHelper {
         const clusterId = this.chats[chatId].cluster;
         delete this.chats[chatId].cluster;
         this.clusters[clusterId] = this.clusters[clusterId].filter(a => a !== chatId);
+        this.updateClusterInDB(clusterId);
+        this.updateChatInDB(chatId);
     }
 
     setChatCluster(chatId, clusterId) {
@@ -141,7 +143,7 @@ class DbHelper {
         
         if (!this.chats[chatId]) this.chats[chatId] = {};
         this.chats[chatId].cluster = clusterId;
-        this.updateClusterInDB(chatId);
+        this.updateChatInDB(chatId);
     }
 
     getAllChatsOfCluster(clusterId) {
@@ -154,9 +156,9 @@ class DbHelper {
     }
 
     updateChatInfo(chat) {
-        if (chat.id in this.chats) {
-            this.chats[chat.id].name = chat.title || chat.username || '$Unnammed';
-        }
+        if (!(chat.id in this.chats)) this.chats[chat.id] = {};
+        this.chats[chat.id].name = chat.title || chat.username || '$Unnammed';
+        this.updateChatInDB(chatId);
     }
 
     updateUserInDB(userId) {
