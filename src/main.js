@@ -72,6 +72,8 @@ console.log('bot loaded.');
 
 
 async function main() {
+    bot.on('polling_error', console.error);
+
     //#region start
     bot.onText(/^\/start/, (msg) => {
         return replyToMessage(msg, 
@@ -294,7 +296,7 @@ async function main() {
     //#endregion
 
     //#region setcluster
-    bot.onText(/^\/setcluster(\s+([a-zA-Z0-9:]+))?\s*$/, (msg, match) => {
+    bot.onText(/^\/setcluster(\s+([\-a-zA-Z0-9:]+))?\s*$/, (msg, match) => {
         if (!isAdmin(msg.from.username)) {
             return replyToMessage(msg, 'You are not authorized to use this command.');
         }
@@ -313,7 +315,7 @@ async function main() {
     //#endregion
 
     //#region setclusterfor
-    bot.onText(/^\/setclusterfor\s+([a-zA-Z0-9:]+)(\s+([a-zA-Z0-9:]+))?\s*$/, (msg, match) => {
+    bot.onText(/^\/setclusterfor\s+([\-a-zA-Z0-9:]+)(\s+([\-a-zA-Z0-9:]+))?\s*$/, (msg, match) => {
         if (!isAdmin(msg.from.username)) {
             return replyToMessage(msg, 'You are not authorized to use this command.');
         }
@@ -345,7 +347,7 @@ async function main() {
             clusters.set(chatInfo.cluster, (clusters.get(chatInfo.cluster) || "") + `  ${chatId}: ${chatInfo.name}\n`);
         }
 
-        return replyToMessage(msg, [...clusters].map(([k, v]) => `${k || 'Unclustered'}:\n${v}`).join("\n"));
+        return replyToMessage(msg, [...clusters].map(([k, v]) => `=== ${k || 'Unclustered'} ===\n${v}`).join("\n"));
     });
     //#endregion
 
@@ -440,6 +442,10 @@ function registerActions(actions, bot) {
                 replyToMessage(msg, action.response[1]);
             } else if (action.response[0] === 'sticker') {
                 replyWithSticker(msg, action.response[1]);
+            } else if (action.response[0] === 'image') {
+                replyWithImage(msg, action.response[1]);
+            } else if (action.response[0] === 'video') {
+                replyWithVideo(msg, action.response[1]);
             } else {
                 throw new Error(`Unknown response type! ${action.response[0]}`);
             }
@@ -576,6 +582,18 @@ function getTopWords() {
 
 function replyToMessage(replyTo, text, options = {}) {
     bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+}
+
+function replyWithSticker(replyTo, sticker, options = {}) {
+    bot.sendSticker(replyTo.chat.id, sticker, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+}
+
+function replyWithImage(replyTo, image, options = {}) {
+    bot.sendPhoto(replyTo.chat.id, video, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+}
+
+function replyWithVideo(replyTo, video, options = {}) {
+    bot.sendVideo(replyTo.chat.id, video, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
 }
 
 function updateSettingsFromPreviousVersion() {
