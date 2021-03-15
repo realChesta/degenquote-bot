@@ -4,6 +4,7 @@ const DbHelper = require('./dbhelper');
 const dateformat = require('dateformat');
 const process = require('process');
 const Markov = require('./markov');
+const {updateActionsObject, checkMatchPredicate} = require('./actions.js');
 
 //TODO: added by
 //TODO: whitelist for /quote
@@ -22,10 +23,18 @@ let launchTime = new Date().getTime() / 1000;
 
 const settingsfile = 'settings.json';
 let settings = undefined;
-try {
-    settings = JSON.parse(fs.readFileSync(settingsfile));
-} catch (e) {
-    console.log('settings file doesn\'t exist or malformed, a new one will be created', e);
+if (fs.statSync(settingsfile)) {
+    console.log('reading settings file...');
+    const settingsContent = fs.readFileSync(settingsfile)
+    try {
+        settings = JSON.parse(settingsContent);
+    } catch (e) {
+        console.error('settings file is malformed', e);
+        console.error('malformed settings file content:', settingsContent);
+        throw e;
+    }
+} else {
+    console.log('settings file does not exist, a new one will be created', e);
 }
 
 settings = {
@@ -38,9 +47,10 @@ settings = {
     "bot_handle": "degenquote_bot",
     ...settings
 };
+updateSettingsFromPreviousVersion();
 saveSettingsSync();
 
-console.log('read settings.');
+console.log('settings read.');
 
 const dbhelper = new DbHelper('data.db');
 dbhelper.load(main);
@@ -56,7 +66,7 @@ if (token == "MISSING_TOKEN") {
     return;
 }
 token = token.trim();
-console.log('token read');
+console.log('token read.');
 let bot = new TelegramBot(token, {polling: true});
 console.log('bot loaded.');
 
@@ -230,6 +240,7 @@ async function main() {
     bot.onText(/^\/stats/, msg => {
         //TODO: add args to list most quoted users, words
 
+        /** @type any */
         let quotes = Object.values(dbhelper.quotes).filter(a => a !== 'quotes').filter(a => hasAccessToQuote(msg.chat, msg.from.id, a));
         let users = [
             ...quotes.reduce(
@@ -301,13 +312,50 @@ async function main() {
     });
     //#endregion
 
+    //#region setclusterfor
+    bot.onText(/^\/setclusterfor\s+([a-zA-Z0-9:]+)(\s+([a-zA-Z0-9:]+))?\s*$/, (msg, match) => {
+        if (!isAdmin(msg.from.username)) {
+            return replyToMessage(msg, 'You are not authorized to use this command.');
+        }
+
+        const chatid = match[1];
+
+        if (!match[2]) {  
+            dbhelper.resetChatCluster(chatid);
+            return replyToMessage(msg, `Chat cluster has been reset!`);
+        }
+
+        const clusterName = match[3];
+        if (!clusterName.startsWith(`cluster:`)) return replyToMessage(msg, `Cluster name must start with 'cluster:'!`);
+
+        dbhelper.setChatCluster(chatid, clusterName);
+        return replyToMessage(msg, `Chat cluster has been set to ${clusterName}!`);
+    });
+    //#endregion
+
+    //#region setclusterfor
+    bot.onText(/^\/listchats$/, (msg, match) => {
+        if (!isAdmin(msg.from.username)) {
+            return replyToMessage(msg, 'You are not authorized to use this command.');
+        }
+
+        const clusters = new Map();
+
+        for (const [chatId, chatInfo] of Object.entries(dbhelper.getAllChats())) {
+            clusters.set(chatInfo.cluster, (clusters.get(chatInfo.cluster) || "") + `  ${chatId}: ${chatInfo.name}`);
+        }
+
+        return replyToMessage(msg, [...clusters].map(([k, v]) => `${k || 'Unclustered'}:\n${v}`).join("\n"));
+    });
+    //#endregion
+
     //#region remove
     bot.onText(/^\/(remove|delete)((\s+[0-9a-z]+)+)$/i, (msg, match) => {
         if (isAdmin(msg.from.username)) {
             let ids = match[2].match(/[0-9a-z]+/gi);
             let deleted = [];
             let failed = [];
-            for (id of ids) {
+            for (const id of ids) {
                 if (dbhelper.removeQuote(id))
                     deleted.push(id);
                 else
@@ -362,23 +410,41 @@ function isAdmin(username) {
 }
 
 function registerActions(actions, bot) {
-    for (reg in actions) {
-        let action = actions[reg];
-        bot.onText(new RegExp(reg, 'i'), msg => {
+    bot.on('message', msg => {
+        dbhelper.updateChatInfo(msg.chat);
 
-            if (action.probability <= Math.random())
-                return;
-            if (action.cluster && action.cluster !== dbhelper.getChatCluster(msg.chat.id))
-                return;
+        const satisfiedGroups = new Set();
+        for (const itAction of actions) {
+            const action = !Array.isArray(itAction) ? itAction : {
+                match: {text: itAction[0]},
+                probability: itAction[1],
+                response: ['text', itAction[2]],
+            };
 
-            if (action.text)
-                return replyToMessage(msg, action.text);
-            else if (action.sticker)
-                return msg.reply.sticker(action.sticker);
-            else if (action.markov)
-                return replyToMessage(msg, markov.generateMessage());
-        });
-    }
+            if ('probability' in action && action.probability <= Math.random())
+                continue;
+            if ('cluster' in action && action.cluster !== dbhelper.getChatCluster(msg.chat.id))
+                continue;
+
+            if (!checkMatchPredicate(action.match, msg))
+                continue;
+
+            if ('group' in action) {
+                if (satisfiedGroups.has(action.group)) continue;
+                satisfiedGroups.add(action.group);
+            }
+
+            if (action.response === 'markov') {
+                replyToMessage(msg, markov.generateMessage());
+            } else if (action.response[0] === 'text') {
+                replyToMessage(msg, action.response[1]);
+            } else if (action.response[0] === 'sticker') {
+                replyWithSticker(msg, action.response[1]);
+            } else {
+                throw new Error(`Unknown response type! ${action.response[0]}`);
+            }
+        }
+    });
 }
 
 function createQuoteString(quote, show, maxlength) {
@@ -452,7 +518,7 @@ function getHelpText(admin) {
         "To view all stored quotes, use /list.\n\n" +
         "Here's my full command list:\n\n" +
         "/quote, /q - store the referenced message as a quote.\n\n" +
-        "/cite id1 [id2, ..., idn], /c - display the quotes with the given ID.\n\n" +
+        "/cite `id1 [id2, ..., idn]`, /c - display the quotes with the given ID.\n\n" +
         "/list `[arg1, arg2, ...] [page]` - display stored quotes, one page at a time.\n" +
         "`user:name` - display quotes from a user with a specific first name or username.\n" +
         "`before|after:dd-mm-yyyy-HH-MM` - display quotes from before/after a specific date and time.\n" +
@@ -469,6 +535,8 @@ function getHelpText(admin) {
             "/stop - stops the bot and ends the process.\n\n" +
             "/adminlist - shows ALL quotes from all chats. Takes the same arguments as /list.\n\n" +
             "/setcluster `[clusterid]` - set the current chat's cluster to the passed argument (empty to reset).\n\n" +
+            "/setclusterfor `chatid [clusterid]` - set the given chat's cluster to the passed argument (empty to reset).\n\n" +
+            "/listchats - lists all chats sorted by their clusters.\n\n" +
             "/reload - reloads settings without restarting the bot.";
     }
 
@@ -508,6 +576,10 @@ function getTopWords() {
 
 function replyToMessage(replyTo, text, options = {}) {
     bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+}
+
+function updateSettingsFromPreviousVersion() {
+    settings.actions = updateActionsObject(settings.actions);
 }
 
 function saveSettingsSync() {

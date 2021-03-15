@@ -10,6 +10,7 @@ Clone the git repository and install the npm modules:
 $ git clone https://github.com/realChesta/degenquote-bot.git
 $ cd degenquote-bot
 $ npm install
+$ npm start
 ```
 
 ## Configuration
@@ -23,7 +24,9 @@ Alternatively, create it yourself. It should look like the following:
     "token": "MISSING_TOKEN",
     "quotes_per_page": 5,
     "admins": [],
-    "actions": {}
+    "actions": [],
+    "markov_file": "markov.json",
+    "bot_handle": "my_tg_bot_handle_bot"
 }
 ```
 
@@ -31,27 +34,85 @@ Alternatively, create it yourself. It should look like the following:
 * `"quotes_per_page"`: how many quotes should be displayed per page with `/list`
 * `"admins"`: the usernames of the users who should be able to manage the bot *(can use `/stop` a.o.)*
 * `"actions"`: contains special configurable actions, see next section
+* `"markov_file"`: the path to the Markov chain file
+* `"bot_handle"`: the bot handle
 
 ### Actions
 
-Quote-Bot can react to regexes with messages you configure. To do this, simply add an action to the `actions` object in `settings.json`. It should have the following format:
+Quote-Bot can react to regexes with messages you configure. To do this, simply add an action to the `actions` array in `settings.json`. It should have one of the following formats:
 
 ```json
 {
-    "regex": {
-        "probability": 1,
-        "text": "hello",
-        "sticker": "yourstickerid"
-    }
+    "match": matchPredicate,  // see Match Predicates section below
+    "probability": number, // optional
+    "cluster": string, // optional; only run if the chat is in the given cluster
+    "group": string, // optional; if given and multiple actions of the same group match, only the first will be executed
+    "response": responseString | [responseType, responseValue]  // see Response Types section below
 }
 ```
 
-* `"regex"`: the regex the action should trigger
-* `"probability"`: a number in the range `[0, 1]` giving with what probability the action should be triggered
-* `"text"`: a text the bot should reply to the message that matched the regex
-* `"sticker"`: the id of a sticker the bot should reply to the matched message with
+or
 
-**IMPORTANT:** only use `"text"` *or* `"sticker"` in one action!
+```json
+[matchText, probability, responseText]
+
+// shorthand for:
+// {
+//   "match": {
+//     "text": matchText
+//   },
+//   "probability": probability,
+//   "response": ["text", responseText]
+// }
+```
+
+Example:
+
+```json
+"actions": [
+    ["im sad", 1, "don't be sad, little one :)"],
+    {
+        "match": {
+            "text": "he[ln]lo\\s+world", 
+            "from": [
+                "any",
+                {
+                    "first_name": "^Bill$",
+                    "last_name": "^(Gates|Clinton)$"
+                },
+                {
+                    "id": 12345678
+                }
+            ]
+            "date": [
+                ">=",
+                "1751117820"
+            ]
+        },
+        "probability": 0.5,
+        "response": [
+            "sticker",
+            "1234ab"
+        ]
+    }
+]
+```
+
+#### Match Predicates
+Match predicates are special values that will be compared to the raw message object delivered by the Telegram API as detailed [here](https://core.telegram.org/bots/api#message). A match predicate object is one of the following:
+* a string: matches if the predicate is a regex matching the input object's string representation (case-**in**sensitive)
+* a number: matches if the predicate is equal to the input object's numeric representation (NaN is equal to NaN, +0 is equal to -0)
+* a boolean: matches if the predicate is equal to the input object's truthiness
+* `null`: matches if the input object is `null`
+* an object with string keys and `matchPredicate` values: matches if the input object is an object or an array and each entry matches the respective match predicate
+* a single-element tuple of the form `[string]`: matches if the JavaScript expression evaluates to a truthy value given that the input object is stored in a parameter `obj` (example: `["obj === 1"]` matches if the input object is equal to 1)
+
+#### Response Types
+
+* `["text", message]`: a text the bot should reply to the message that matched the regex
+* `["sticker", stickerid]`: the id of a sticker the bot should reply to the matched message with
+* `"markov"`: reply with a markov chain message
+
 
 ## Usage
 
