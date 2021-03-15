@@ -342,7 +342,7 @@ async function main() {
         const clusters = new Map();
 
         for (const [chatId, chatInfo] of Object.entries(dbhelper.getAllChats())) {
-            clusters.set(chatInfo.cluster, (clusters.get(chatInfo.cluster) || "") + `  ${chatId}: ${chatInfo.name}`);
+            clusters.set(chatInfo.cluster, (clusters.get(chatInfo.cluster) || "") + `  ${chatId}: ${chatInfo.name}\n`);
         }
 
         return replyToMessage(msg, [...clusters].map(([k, v]) => `${k || 'Unclustered'}:\n${v}`).join("\n"));
