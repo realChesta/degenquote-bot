@@ -74,20 +74,11 @@ Example:
     {
         "match": {
             "text": "he[ln]lo\\s+world", 
-            "from": [
-                "any",
-                {
-                    "first_name": "^Bill$",
-                    "last_name": "^(Gates|Clinton)$"
-                },
-                {
-                    "id": 12345678
-                }
-            ]
-            "date": [
-                ">=",
-                "1751117820"
-            ]
+            "from": {
+                "first_name": "^Bill$",
+                "last_name": "^(Gates|Clinton)$"
+            },
+            "date": [">= 1751117820"]
         },
         "probability": 0.5,
         "response": [
@@ -100,7 +91,7 @@ Example:
 
 #### Match Predicates
 Match predicates are special values that will be compared to the raw message object delivered by the Telegram API as detailed [here](https://core.telegram.org/bots/api#message). A match predicate object is one of the following:
-* a string: matches if the predicate is a regex matching the input object's string representation (case-**in**sensitive)
+* a string: matches if the predicate is a regex matching the input object's string representation (case-**in**sensitive). Empty string matches all values
 * a number: matches if the predicate is equal to the input object's numeric representation (NaN is equal to NaN, +0 is equal to -0)
 * a boolean: matches if the predicate is equal to the input object's truthiness
 * `null`: matches if the input object is `null`
@@ -109,8 +100,10 @@ Match predicates are special values that will be compared to the raw message obj
 
 #### Response Types
 
-* `["text", message]`: a text the bot should reply to the message that matched the regex
-* `["sticker", stickerid]`: the id of a sticker the bot should reply to the matched message with
+* `["text", message]`: reply with text
+* `["sticker", stickerid]`: reply with a sticker
+* `["image", imageurl]`: reply with an image from the internet
+* `["video", videourl]`: reply with a video from the internet
 * `"markov"`: reply with a markov chain message
 
 
