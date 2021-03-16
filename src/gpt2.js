@@ -13,8 +13,8 @@ class GPT2 {
         if (!text) return;
 
         const arr = [...(this.recentMessages.get(msg.chat.id) || []), text];
-        while (arr.length > 6) {
-            arr.unshift();
+        while (arr.length > 20) {
+            arr.shift();
         }
         this.recentMessages.set(msg.chat.id, arr);
     }
