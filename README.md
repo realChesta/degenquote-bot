@@ -30,6 +30,7 @@ Alternatively, create it yourself. It should look like the following:
     "enable_markov_for_clusters": [],
     "enable_gpt2_for_clusters": [],
     "markov_file": "markov.json",
+    "python_name": "python3",
     "bot_handle": "my_tg_bot_handle_bot"
 }
 ```
@@ -40,6 +41,7 @@ Alternatively, create it yourself. It should look like the following:
 * `"actions"`: contains special configurable actions, see next section
 * `"enable_markov_for_clusters"`: list of clusters in which the bot will respond with markov messages when replied to
 * `"markov_file"`: the path to the Markov chain file
+* `"python_name"`: name or path of the Python interpreter executable (for GPT-2)
 * `"bot_handle"`: the bot handle
 
 ### Actions
