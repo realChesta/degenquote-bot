@@ -63,7 +63,7 @@ const markovEntries = fs.existsSync(settings.markov_file) ? JSON.parse(fs.readFi
 const markov = new Markov(markovEntries);
 console.log('markov loaded.');
 
-const gpt2 = new GPT2(this.python_name);
+const gpt2 = new GPT2(settings.python_name);
 console.log('gpt2 loaded.');
 
 let token = settings.token;
