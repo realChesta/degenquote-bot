@@ -47,6 +47,7 @@ settings = {
     "enable_markov_for_clusters": ["cluster:original"],
     "enable_gpt2_for_clusters": [],
     "bot_handle": "degenquote_bot",
+    "python_name": "python3",
     ...settings
 };
 updateSettingsFromPreviousVersion();
@@ -62,7 +63,7 @@ const markovEntries = fs.existsSync(settings.markov_file) ? JSON.parse(fs.readFi
 const markov = new Markov(markovEntries);
 console.log('markov loaded.');
 
-const gpt2 = new GPT2();
+const gpt2 = new GPT2(settings.python_name);
 console.log('gpt2 loaded.');
 
 let token = settings.token;
