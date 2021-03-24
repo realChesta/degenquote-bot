@@ -450,8 +450,8 @@ function registerActions(actions, bot) {
     bot.on('message', msg => {
 
         dbhelper.updateChatInfo(msg.chat);
-        gpt2.registerMessage(msg);
-        gpt3.registerMessage(msg);
+        gpt2.registerMessage(msg.text, msg.chat.id);
+        gpt3.registerMessage(msg.text, msg.chat.id);
 
         const satisfiedGroups = new Set();
         for (const itAction of actions) {
@@ -623,6 +623,9 @@ function getTopWords() {
 }
 
 function replyToMessage(replyTo, text, options = {}) {
+    gpt2.registerMessage(text, replyTo.chat.id);
+    gpt3.registerMessage(text, replyTo.chat.id);
+
     bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, ...options});
 }
 

@@ -9,15 +9,14 @@ class GPT2 {
         this.recentMessages = new Map();
     }
 
-    registerMessage(msg) {
-        const text = msg.text;
+    registerMessage(text, chatId) {
         if (!text) return;
 
-        const arr = [...(this.recentMessages.get(msg.chat.id) || []), text];
+        const arr = [...(this.recentMessages.get(chatId) || []), text];
         while (arr.length > 20) {
             arr.shift();
         }
-        this.recentMessages.set(msg.chat.id, arr);
+        this.recentMessages.set(chatId, arr);
     }
 
     async generateMessage(msg) {
