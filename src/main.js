@@ -618,11 +618,14 @@ function replyWithVideo(replyTo, video, options = {}) {
 }
 
 function replyWithGPT2(replyTo) {
-    const count = 1 + Math.floor(Math.log(1 / Math.random()) / Math.log(2));
+    const count = 1 + Math.floor(Math.log(1 / Math.random()) / Math.log(1.7));
     gpt2.generateMessage(replyTo)
         .then(t => (t || 'chill down').split("\n\n")
                                       .slice(0, count)
-                                      .forEach(msg => replyToMessage(replyTo, msg, {reply_to_message_id: undefined})));
+                                      .forEach((msg, i) => replyToMessage(
+                                          replyTo,
+                                          msg, i === 0 ? {} : {reply_to_message_id: undefined}
+                                      )));
 }
 
 function updateSettingsFromPreviousVersion() {
