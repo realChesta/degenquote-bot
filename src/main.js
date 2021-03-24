@@ -420,7 +420,7 @@ async function main() {
         if (settings.enable_gpt3_for_clusters.includes(dbhelper.getChatCluster(msg.chat.id))
                 && msg.reply_to_message
                 && msg.reply_to_message.from.username === settings.bot_handle
-                && (msg.text.includes('?') || Math.random() < 0.6)) {
+                && (msg.text.includes('?') || Math.random() < 0.8)) {
             return replyWithGPT3(msg);
         }
     });
@@ -650,7 +650,7 @@ function replyWithGPT2(replyTo) {
 }
 
 function replyWithGPT3(replyTo) {
-    const count = 1 + Math.floor(Math.log(1 / Math.random()) / Math.log(1.7));
+    const count = 1 + Math.floor(Math.log(1 / Math.random()) / Math.log(3));
     gpt3.generateMessage(replyTo)
         .then(t => (t || 'chill down').split("\n\n")
                                       .filter(x => x.trim())

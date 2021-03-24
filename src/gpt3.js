@@ -28,7 +28,7 @@ class GPT3 {
         return await new Promise((resolve, reject) => {
             const msgs = this.recentMessages.get(msg.chat.id) || [];
             if (msgs[msgs.length - 1] !== msg.text) msgs.push(msg.text);
-            const text = msgs.join('\n\n');
+            const text = msgs.join('\n\n').replace(/\@[a-zA-Z]+/g, "");
 
             console.log('Launching a GPT-3 instance...');
             this.isRunning = true;
