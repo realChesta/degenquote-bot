@@ -2,7 +2,7 @@ import sys
 import openai
 openai.api_key = sys.argv[2]
 inp = sys.argv[1] + "\n\n"
-response = openai.Completion.create(engine="davinci", prompt=inp, max_tokens=50)
+response = openai.Completion.create(engine="davinci", prompt=inp, max_tokens=150)
 
 print("Generated GPT-3!", file=sys.stderr, flush=True)
 
