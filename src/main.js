@@ -85,13 +85,13 @@ async function main() {
         return replyToMessage(msg, 
             "Hi! I'm the Degen Quote Bot. I can store all your notable quotes.\n" +
             getHelpText(isAdmin(msg.from.username)),
-            { parseMode: 'Markdown' });
+            { parse_mode: 'Markdown' });
     });
     //#endregion
 
     //#region help
     bot.onText(/^\/help/, (msg) => {
-        return replyToMessage(msg, getHelpText(isAdmin(msg.from.username)), { parseMode: 'Markdown' });
+        return replyToMessage(msg, getHelpText(isAdmin(msg.from.username)), { parse_mode: 'Markdown' });
     });
     //#endregion
 
@@ -124,7 +124,7 @@ async function main() {
             }
             list += createQuoteString(quote, '', 3800 / ids.length);
         }
-        return replyToMessage(msg, list, { parseMode: 'Markdown' });
+        return replyToMessage(msg, list, { parse_mode: 'Markdown' });
     });
     //#endregion
 
@@ -240,7 +240,7 @@ async function main() {
             // we make sure the message is not more than the 4096 char limit 
         }
 
-        return replyToMessage(msg, list, { parseMode: 'Markdown' });
+        return replyToMessage(msg, list, { parse_mode: 'Markdown' });
     });
     //#endregion
 
@@ -268,7 +268,7 @@ async function main() {
             `${users[2][1]} quotes. The least quoted user is ${formatUser(users[users.length - 1][0])} ` +
             `with ${users[users.length - 1][1]} quotes.`;
 
-        return replyToMessage(msg, text, { parseMode: 'Markdown' });
+        return replyToMessage(msg, text, { parse_mode: 'Markdown' });
     });
     //#endregion
 
@@ -379,7 +379,7 @@ async function main() {
                 deltext += "Couldn't delete the following quotes: " + failed.join(', ') + '.\n' +
                     "(Double check your ids)";
             }
-            return replyToMessage(msg, deltext, { parseMode: 'Markdown' });
+            return replyToMessage(msg, deltext, { parse_mode: 'Markdown' });
         }
         else
             return replyToMessage(msg, 'You are not authorized to use this command.');
@@ -403,7 +403,7 @@ async function main() {
                 && msg.reply_to_message
                 && msg.reply_to_message.from.username === settings.bot_handle
                 && (msg.text.includes('?') || Math.random() < 0.6)) {
-            return replyToMessage(msg, await gpt2.generateMessage(msg));
+            return replyWithGPT2(msg);
         }
     });
     //#endregion
@@ -458,7 +458,7 @@ function registerActions(actions, bot) {
             if (action.response === 'markov') {
                 replyToMessage(msg, markov.generateMessage());
             } else if (action.response === 'gpt2') {
-                gpt2.generateMessage(msg).then(response => replyToMessage(msg, response));
+                replyWithGPT2(msg);
             } else if (action.response[0] === 'text') {
                 replyToMessage(msg, action.response[1]);
             } else if (action.response[0] === 'sticker') {
@@ -602,19 +602,27 @@ function getTopWords() {
 }
 
 function replyToMessage(replyTo, text, options = {}) {
-    bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+    bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, ...options});
 }
 
 function replyWithSticker(replyTo, sticker, options = {}) {
-    bot.sendSticker(replyTo.chat.id, sticker, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+    bot.sendSticker(replyTo.chat.id, sticker, {reply_to_message_id: replyTo.message_id, ...options});
 }
 
 function replyWithImage(replyTo, image, options = {}) {
-    bot.sendPhoto(replyTo.chat.id, video, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+    bot.sendPhoto(replyTo.chat.id, video, {reply_to_message_id: replyTo.message_id, ...options});
 }
 
 function replyWithVideo(replyTo, video, options = {}) {
-    bot.sendVideo(replyTo.chat.id, video, {reply_to_message_id: replyTo.message_id, parse_mode: options.parseMode});
+    bot.sendVideo(replyTo.chat.id, video, {reply_to_message_id: replyTo.message_id, ...options});
+}
+
+function replyWithGPT2(replyTo) {
+    const count = 1 + Math.floor(Math.log(1 / Math.random()) / Math.log(2));
+    gpt2.generateMessage(replyTo)
+        .then(t => (t || 'chill down').split("\n\n")
+                                      .slice(0, count)
+                                      .forEach(msg => replyToMessage(replyTo, msg, {reply_to_message_id: undefined})));
 }
 
 function updateSettingsFromPreviousVersion() {

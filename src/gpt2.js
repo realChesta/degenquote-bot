@@ -21,7 +21,7 @@ class GPT2 {
 
     async generateMessage(msg) {
         if (this.isRunning) {
-            return `chill down`;
+            return null;
         }
 
         return await new Promise((resolve, reject) => {
@@ -33,7 +33,7 @@ class GPT2 {
             this.isRunning = true;
 
             let res = '';
-            const proc = spawn(this.pythonName, ['generate.py', '--', text], {cwd: 'src/gpt2'});
+            const proc = spawn(this.pythonName, ['generate.py', text], {cwd: 'src/gpt2'});
 
             proc.stdout.on('data', (data) => {
                 res += data;
