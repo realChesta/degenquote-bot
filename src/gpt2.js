@@ -2,8 +2,9 @@ const {spawn} = require('child_process');
 const process = require('process');
 
 class GPT2 {
-    constructor(pythonName) {
+    constructor(pythonName, gpt3key) {
         this.pythonName = pythonName;
+		this.gpt3key = gpt3key
         this.isRunning = false;
         this.recentMessages = new Map();
     }
@@ -33,7 +34,7 @@ class GPT2 {
             this.isRunning = true;
 
             let res = '';
-            const proc = spawn(this.pythonName, ['generate.py', text], {cwd: 'src/gpt2'});
+            const proc = spawn(this.pythonName, ['generate.py', text, this.gpt3key], {cwd: 'src/gpt2'});
 
             proc.stdout.on('data', (data) => {
                 res += data;

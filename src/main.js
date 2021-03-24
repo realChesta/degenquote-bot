@@ -50,6 +50,7 @@ settings = {
     "enable_gpt3_for_clusters": [],
     "bot_handle": "degenquote_bot",
     "python_name": "python3",
+    "gpt3_key": "",
     ...settings
 };
 updateSettingsFromPreviousVersion();
@@ -68,7 +69,7 @@ console.log('markov loaded.');
 const gpt2 = new GPT2(settings.python_name);
 console.log('gpt2 loaded.');
 
-const gpt3 = new GPT3(settings.python_name);
+const gpt3 = new GPT3(settings.python_name, settings.gpt3_key);
 console.log('gpt3 loaded.');
 
 
