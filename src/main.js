@@ -451,6 +451,7 @@ function registerActions(actions, bot) {
 
         dbhelper.updateChatInfo(msg.chat);
         gpt2.registerMessage(msg);
+        gpt3.registerMessage(msg);
 
         const satisfiedGroups = new Set();
         for (const itAction of actions) {
