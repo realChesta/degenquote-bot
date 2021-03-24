@@ -6,6 +6,7 @@ const process = require('process');
 const Markov = require('./markov');
 const {updateActionsObject, checkMatchPredicate} = require('./actions.js');
 const { GPT2 } = require('./gpt2');
+const { GPT3 } = require('./gpt3');
 
 //TODO: added by
 //TODO: whitelist for /quote
@@ -46,8 +47,10 @@ settings = {
     "markov_file": "markov.json",
     "enable_markov_for_clusters": ["cluster:original"],
     "enable_gpt2_for_clusters": [],
+    "enable_gpt3_for_clusters": [],
     "bot_handle": "degenquote_bot",
     "python_name": "python3",
+    "gpt3_key": "",
     ...settings
 };
 updateSettingsFromPreviousVersion();
@@ -65,6 +68,10 @@ console.log('markov loaded.');
 
 const gpt2 = new GPT2(settings.python_name);
 console.log('gpt2 loaded.');
+
+const gpt3 = new GPT3(settings.python_name, settings.gpt3_key);
+console.log('gpt3 loaded.');
+
 
 let token = settings.token;
 if (token == "MISSING_TOKEN") {
@@ -408,6 +415,17 @@ async function main() {
     });
     //#endregion
 
+    //#region gpt3
+    bot.onText(/[^]*/, async (msg) => {
+        if (settings.enable_gpt3_for_clusters.includes(dbhelper.getChatCluster(msg.chat.id))
+                && msg.reply_to_message
+                && msg.reply_to_message.from.username === settings.bot_handle
+                && (msg.text.includes('?') || Math.random() < 0.6)) {
+            return replyWithGPT3(msg);
+        }
+    });
+    //#endregion
+
     //#region idinfo
     bot.onText(/^\/idinfo/, (msg) => {
         const cluster = dbhelper.getChatCluster(msg.chat.id);
@@ -459,7 +477,9 @@ function registerActions(actions, bot) {
                 replyToMessage(msg, markov.generateMessage());
             } else if (action.response === 'gpt2') {
                 replyWithGPT2(msg);
-            } else if (action.response[0] === 'text') {
+            } else if (action.response === 'gpt3') {
+                replyWithGPT3(msg);
+            }  else if (action.response[0] === 'text') {
                 replyToMessage(msg, action.response[1]);
             } else if (action.response[0] === 'sticker') {
                 replyWithSticker(msg, action.response[1]);
@@ -627,6 +647,19 @@ function replyWithGPT2(replyTo) {
                                           msg, i === 0 ? {} : {reply_to_message_id: undefined}
                                       )));
 }
+
+function replyWithGPT3(replyTo) {
+    const count = 1 + Math.floor(Math.log(1 / Math.random()) / Math.log(1.7));
+    gpt3.generateMessage(replyTo)
+        .then(t => (t || 'chill down').split("\n\n")
+                                      .filter(x => x)
+									  .slice(0, count)
+                                      .forEach((msg, i) => replyToMessage(
+                                          replyTo,
+                                          msg, i === 0 ? {} : {reply_to_message_id: undefined}
+                                      )));
+}
+
 
 function updateSettingsFromPreviousVersion() {
     settings.actions = updateActionsObject(settings.actions);

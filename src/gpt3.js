@@ -1,10 +1,10 @@
 const {spawn} = require('child_process');
 const process = require('process');
 
-class GPT2 {
+class GPT3 {
     constructor(pythonName, gpt3key) {
         this.pythonName = pythonName;
-		this.gpt3key = gpt3key
+        this.gpt3key = gpt3key ;
         this.isRunning = false;
         this.recentMessages = new Map();
     }
@@ -30,11 +30,11 @@ class GPT2 {
             if (msgs[msgs.length - 1] !== msg.text) msgs.push(msg.text);
             const text = msgs.join('\n\n');
 
-            console.log('Launching a GPT-2 instance...');
+            console.log('Launching a GPT-3 instance...');
             this.isRunning = true;
 
             let res = '';
-            const proc = spawn(this.pythonName, ['generate.py', text, this.gpt3key], {cwd: 'src/gpt2'});
+			const proc = spawn(this.pythonName, ['generate_gpt3.py', text, this.gpt3key], {cwd: 'src/gpt3'});
 
             proc.stdout.on('data', (data) => {
                 res += data;
@@ -45,7 +45,7 @@ class GPT2 {
             });
 
             proc.on('close', (code) => {
-                console.log(`A GPT-2 instance exited with exit code: ${code}`);
+                console.log(`A GPT-3 instance exited with exit code: ${code}`);
                 this.isRunning = false;
     
                 resolve(res.split('==== delimiter ====\n')[1] || 'no clue lol');
@@ -54,6 +54,7 @@ class GPT2 {
     }
 }
 
+/*
 if (require.main === module) {
   if (process.argv.length !== 4) {
       console.error(`Usage: npm run gpt2 [-- inPath outPath]`);
@@ -88,8 +89,8 @@ if (require.main === module) {
       fs.writeFileSync(outp, res);
       console.error('Done!');
   }
-}
+}*/
 
 module.exports = {
-    GPT2
+    GPT3
 };
