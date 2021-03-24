@@ -643,10 +643,10 @@ function replyWithGPT2(replyTo) {
         .then(t => (t || 'chill down').split("\n\n")
                                       .filter(x => x.trim())
                                       .slice(0, count)
-                                      .forEach((msg, i) => setTimeout(replyToMessage(
+                                      .forEach((msg, i) => setTimeout(() => replyToMessage(
                                           replyTo,
                                           msg, i === 0 ? {} : {reply_to_message_id: undefined}
-                                      )), 500 * i));
+                                      ), 500 * i)));
 }
 
 function replyWithGPT3(replyTo) {
@@ -655,10 +655,10 @@ function replyWithGPT3(replyTo) {
         .then(t => (t || 'chill down').split("\n\n")
                                       .filter(x => x.trim())
 									  .slice(0, count)
-                                      .forEach((msg, i) => setTimeout(replyToMessage(
+                                      .forEach((msg, i) => setTimeout(() => replyToMessage(
                                           replyTo,
                                           msg, i === 0 ? {} : {reply_to_message_id: undefined}
-                                      )), 500 * i));
+                                      ), 500 * i)));
 }
 
 
