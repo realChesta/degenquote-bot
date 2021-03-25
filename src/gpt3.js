@@ -9,25 +9,47 @@ class GPT3 {
         this.recentMessages = new Map();
     }
 
-    registerMessage(text, chatId) {
+    registerMessage(text, chatId, userDisplay) {
         if (!text) return;
+        if (!chatId) {
+            chatId = text.chat.id;
+            userDisplay = text.from.first_name || text.from.username;
+            text = text.text;
+        }
 
-        const arr = [...(this.recentMessages.get(chatId) || []), text];
+        const startingPrompts = [
+            "Mark: Hey QBot, how are you doing?",
+            "QBot Ashcraft: I'm doing pretty well, thanks for asking!",
+            "Mark: you're welcome"
+        ];
+
+        const txt = userDisplay + ": " + text.replace("\n", " \\n ");
+        let arr = [...(this.recentMessages.get(chatId) || startingPrompts)]
+        if (arr[arr.length - 1] !== txt) {
+            arr.push(txt);
+        }
+
         while (arr.length > 20) {
             arr.shift();
         }
+
+        if (text.includes("reset please")) {
+            arr = startingPrompts;
+        }
+
         this.recentMessages.set(chatId, arr);
     }
 
     async generateMessage(msg) {
+        this.registerMessage(msg);
+
         if (this.isRunning) {
             return null;
         }
 
         return await new Promise((resolve, reject) => {
             const msgs = this.recentMessages.get(msg.chat.id) || [];
-            if (msgs[msgs.length - 1] !== msg.text) msgs.push(msg.text);
-            const text = msgs.join('\n\n').replace(/\@[a-zA-Z]+/g, "");
+            const text = msgs.join('\n').replace(/\@[a-zA-Z]+/g, "") + "\nQBot Ashcraft: ";
 
             console.log('Launching a GPT-3 instance...');
             this.isRunning = true;
@@ -47,7 +69,7 @@ class GPT3 {
                 console.log(`A GPT-3 instance exited with exit code: ${code}`);
                 this.isRunning = false;
     
-                resolve(res.split('==== delimiter ====\n')[1] || 'no clue lol');
+                resolve(res.split('==== delimiter ====\n')[1].replace("\\n", "\n").trim() || 'no clue lol');
             });
         });
     }

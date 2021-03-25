@@ -1,9 +1,13 @@
 import sys
 import openai
-openai.api_key = sys.argv[2]
-inp = sys.argv[1] + "\n\n"
-response = openai.Completion.create(engine="davinci", prompt=inp, max_tokens=150)
 
+prompt = """The following is an online chat room conversation between some friends and QBot Ashcraft. QBot Ashcraft is a smart and helpful AI trying to imitate a human."""
+
+openai.api_key = sys.argv[2]
+inp = prompt + "\n\n" + sys.argv[1]
+
+print("Generating GPT-3 from '", inp.replace("\n", "<newline>"), "'...", file=sys.stderr, flush=True)
+response = openai.Completion.create(engine="davinci", prompt=inp, stop=["\n"], max_tokens=150)
 print("Generated GPT-3!", file=sys.stderr, flush=True)
 
 textresponse = response.choices[0].text

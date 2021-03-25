@@ -451,7 +451,7 @@ function registerActions(actions, bot) {
 
         dbhelper.updateChatInfo(msg.chat);
         gpt2.registerMessage(msg.text, msg.chat.id);
-        gpt3.registerMessage(msg.text, msg.chat.id);
+        gpt3.registerMessage(msg);
 
         const satisfiedGroups = new Set();
         for (const itAction of actions) {
@@ -625,7 +625,7 @@ function getTopWords() {
 function replyToMessage(replyTo, text, options = {}) {
     if (options.use_to_finetune) {
         gpt2.registerMessage(text, replyTo.chat.id);
-        gpt3.registerMessage(text, replyTo.chat.id);
+        gpt3.registerMessage(text, replyTo.chat.id, "QBot Ashcraft");
     }
 
     bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, ...options});
@@ -651,20 +651,17 @@ function replyWithGPT2(replyTo) {
                                       .slice(0, count)
                                       .forEach((msg, i) => setTimeout(() => replyToMessage(
                                           replyTo,
-                                          msg, i === 0 ? {} : {reply_to_message_id: undefined, use_to_finetune: true}
+                                          msg,
+                                          {use_to_finetune: true, ...(i === 0 ? {} : {reply_to_message_id: undefined})}
                                       ), 500 * i)));
 }
 
 function replyWithGPT3(replyTo) {
-    const count = 1 + Math.floor(Math.log(1 / Math.random()) / Math.log(3));
-    gpt3.generateMessage(replyTo)
-        .then(t => (t || 'chill down').split("\n\n")
-                                      .filter(x => x.trim())
-									  .slice(0, count)
-                                      .forEach((msg, i) => setTimeout(() => replyToMessage(
-                                          replyTo,
-                                          msg, i === 0 ? {} : {reply_to_message_id: undefined, use_to_finetune: true}
-                                      ), 500 * i)));
+    gpt3.generateMessage(replyTo).then(t => replyToMessage(
+        replyTo,
+        (t || 'chill down'),
+        {use_to_finetune: true}
+    ));
 }
 
 
