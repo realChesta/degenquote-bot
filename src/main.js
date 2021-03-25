@@ -623,8 +623,10 @@ function getTopWords() {
 }
 
 function replyToMessage(replyTo, text, options = {}) {
-    gpt2.registerMessage(text, replyTo.chat.id);
-    gpt3.registerMessage(text, replyTo.chat.id);
+    if (options.use_to_finetune) {
+        gpt2.registerMessage(text, replyTo.chat.id);
+        gpt3.registerMessage(text, replyTo.chat.id);
+    }
 
     bot.sendMessage(replyTo.chat.id, text, {reply_to_message_id: replyTo.message_id, ...options});
 }
@@ -634,7 +636,7 @@ function replyWithSticker(replyTo, sticker, options = {}) {
 }
 
 function replyWithImage(replyTo, image, options = {}) {
-    bot.sendPhoto(replyTo.chat.id, video, {reply_to_message_id: replyTo.message_id, ...options});
+    bot.sendPhoto(replyTo.chat.id, image, {reply_to_message_id: replyTo.message_id, ...options});
 }
 
 function replyWithVideo(replyTo, video, options = {}) {
@@ -649,7 +651,7 @@ function replyWithGPT2(replyTo) {
                                       .slice(0, count)
                                       .forEach((msg, i) => setTimeout(() => replyToMessage(
                                           replyTo,
-                                          msg, i === 0 ? {} : {reply_to_message_id: undefined}
+                                          msg, i === 0 ? {} : {reply_to_message_id: undefined, use_to_finetune: true}
                                       ), 500 * i)));
 }
 
@@ -661,7 +663,7 @@ function replyWithGPT3(replyTo) {
 									  .slice(0, count)
                                       .forEach((msg, i) => setTimeout(() => replyToMessage(
                                           replyTo,
-                                          msg, i === 0 ? {} : {reply_to_message_id: undefined}
+                                          msg, i === 0 ? {} : {reply_to_message_id: undefined, use_to_finetune: true}
                                       ), 500 * i)));
 }
 
