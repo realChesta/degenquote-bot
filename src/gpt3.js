@@ -11,12 +11,12 @@ class GPT3 {
     }
 
     registerMessage(text, chatId, userDisplay) {
-        if (!text) return;
         if (!chatId) {
             chatId = text.chat.id;
             userDisplay = text.from.first_name || text.from.username;
             text = text.text;
         }
+        if (!text) return;
 
         const startingPrompts = [
             "Mark: Hey QBot, how are you doing?",

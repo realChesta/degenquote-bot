@@ -70,7 +70,7 @@ console.log('markov loaded.');
 const gpt2 = new GPT2(settings.python_name);
 console.log('gpt2 loaded.');
 
-const gpt3 = new GPT3(settings.python_name, settings.gpt3_key);
+const gpt3 = new GPT3(settings.python_name, settings.gpt3_key, settings.gpt3_engine);
 console.log('gpt3 loaded.');
 
 
