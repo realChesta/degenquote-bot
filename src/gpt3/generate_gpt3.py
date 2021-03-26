@@ -7,7 +7,7 @@ openai.api_key = sys.argv[2]
 inp = prompt + "\n\n" + sys.argv[1]
 
 print("Generating GPT-3 from '", inp.replace("\n", "<newline>"), "'...", file=sys.stderr, flush=True)
-response = openai.Completion.create(engine="davinci", prompt=inp, stop=["\n"], max_tokens=150)
+response = openai.Completion.create(engine=sys.argv[3], prompt=inp, stop=["\n"], max_tokens=50)
 print("Generated GPT-3!", file=sys.stderr, flush=True)
 
 textresponse = response.choices[0].text

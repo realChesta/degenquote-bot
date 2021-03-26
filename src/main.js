@@ -51,6 +51,7 @@ settings = {
     "bot_handle": "degenquote_bot",
     "python_name": "python3",
     "gpt3_key": "",
+    "gpt3_engine": "babbage",
     ...settings
 };
 updateSettingsFromPreviousVersion();

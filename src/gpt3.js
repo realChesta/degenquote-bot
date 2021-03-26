@@ -2,9 +2,10 @@ const {spawn} = require('child_process');
 const process = require('process');
 
 class GPT3 {
-    constructor(pythonName, gpt3key) {
+    constructor(pythonName, gpt3key, gpt3engine) {
         this.pythonName = pythonName;
-        this.gpt3key = gpt3key ;
+        this.gpt3key = gpt3key;
+        this.gpt3engine = gpt3engine;
         this.isRunning = false;
         this.recentMessages = new Map();
     }
@@ -29,7 +30,7 @@ class GPT3 {
             arr.push(txt);
         }
 
-        while (arr.length > 20) {
+        while (arr.length > 10) {
             arr.shift();
         }
 
@@ -55,7 +56,7 @@ class GPT3 {
             this.isRunning = true;
 
             let res = '';
-			const proc = spawn(this.pythonName, ['generate_gpt3.py', text, this.gpt3key], {cwd: 'src/gpt3'});
+			const proc = spawn(this.pythonName, ['generate_gpt3.py', text, this.gpt3key, this.gpt3engine], {cwd: 'src/gpt3'});
 
             proc.stdout.on('data', (data) => {
                 res += data;
